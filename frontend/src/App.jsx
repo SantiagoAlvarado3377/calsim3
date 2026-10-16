@@ -1,16 +1,23 @@
 import { useState } from 'react';
+import Dashboard from './pages/Dashboard';
 import DataExplorer from './pages/DataExplorer';
 import './App.css';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('');
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   return (
     <div className="app-layout">
       <aside className="sidebar">
         <h2>CalSim 3 Copilot</h2>
-
         <nav aria-label="Main navigation">
+          <button
+            type="button"
+            onClick={() => setCurrentPage('dashboard')}
+            aria-current={currentPage === 'dashboard' ? 'page' : undefined}
+          >
+            Dashboard
+          </button>
           <button
             type="button"
             onClick={() => setCurrentPage('data-explorer')}
@@ -20,14 +27,10 @@ function App() {
           </button>
         </nav>
       </aside>
-
-      {/* opens the page when Data Explorer is selected */}
-      {currentPage === 'data-explorer' ? (
-        <DataExplorer />
+      {currentPage === 'dashboard' ? (
+        <Dashboard />
       ) : (
-        <main className="welcome">
-          <p>Select Data Explorer to open your workspace.</p>
-        </main>
+        <DataExplorer />
       )}
     </div>
   );
