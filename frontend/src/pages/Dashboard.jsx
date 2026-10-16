@@ -8,7 +8,14 @@ const emptySummary = {
   lastImport: null,
 };
 
-function Dashboard({ summary = emptySummary }) {
+const quickActions = [
+  { label: 'Import HEC-DSS', destination: 'import-data', primary: true },
+  { label: 'Search variables', destination: 'variable-search' },
+  { label: 'Compare runs', destination: 'compare-runs' },
+  { label: 'Detect anomalies', destination: 'anomaly-detection' },
+];
+
+function Dashboard({ summary = emptySummary, onNavigate }) {
   const formatCount = value => new Intl.NumberFormat().format(value);
   const lastImport = summary.lastImport
     ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(summary.lastImport))
@@ -38,6 +45,21 @@ function Dashboard({ summary = emptySummary }) {
             </div>
           ))}
         </dl>
+        <section className="dashboard-actions" aria-labelledby="quick-actions-title">
+          <h2 id="quick-actions-title">Quick actions</h2>
+          <div className="dashboard-action-buttons">
+            {quickActions.map(action => (
+              <button
+                key={action.destination}
+                type="button"
+                className={action.primary ? 'dashboard-action dashboard-action--primary' : 'dashboard-action'}
+                onClick={() => onNavigate(action.destination)}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </main>
   );

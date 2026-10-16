@@ -3,6 +3,24 @@ import Dashboard from './pages/Dashboard';
 import DataExplorer from './pages/DataExplorer';
 import './App.css';
 
+const destinations = {
+  'import-data': 'Import Data',
+  'variable-search': 'Variable Search',
+  'compare-runs': 'Compare Runs',
+  'anomaly-detection': 'Anomaly Detection',
+};
+
+// Only navigation destinations are provided here; their features belong to later work.
+function DestinationPage({ title }) {
+  return (
+    <main className="data-explorer" aria-labelledby="destination-title">
+      <header className="data-explorer-header">
+        <h1 id="destination-title">{title}</h1>
+      </header>
+    </main>
+  );
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
 
@@ -28,9 +46,11 @@ function App() {
         </nav>
       </aside>
       {currentPage === 'dashboard' ? (
-        <Dashboard />
-      ) : (
+        <Dashboard onNavigate={setCurrentPage} />
+      ) : currentPage === 'data-explorer' ? (
         <DataExplorer />
+      ) : (
+        <DestinationPage title={destinations[currentPage]} />
       )}
     </div>
   );
