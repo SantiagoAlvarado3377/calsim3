@@ -50,3 +50,23 @@
   color: #17324d;
   font-size: 30px;
 }
+
+@media (max-width: 720px) {
+  .app-layout--compare-runs {
+    flex-direction: column;
+  }
+
+  .app-layout--compare-runs .sidebar {
+    width: 100%;
+    padding: 16px 20px;
+  }
+
+  .app-layout--compare-runs .sidebar h2 {
+    margin-bottom: 12px;
+  }
+
+  .app-layout--compare-runs .sidebar nav {
+    display: flex;
+    gap: 8px;
+  }
+}

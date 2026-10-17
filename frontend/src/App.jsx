@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Dashboard from './pages/Dashboard';
 import DataExplorer from './pages/DataExplorer';
+import CompareRuns from './pages/CompareRuns';
 import './App.css';
 
 const destinations = {
@@ -9,6 +10,12 @@ const destinations = {
   'compare-runs': 'Compare Runs',
   'anomaly-detection': 'Anomaly Detection',
 };
+
+const sidebarDestinations = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'data-explorer', label: 'Data Explorer' },
+  { id: 'compare-runs', label: 'Compare Runs' },
+];
 
 // Only navigation destinations are provided here; their features belong to later work.
 function DestinationPage({ title }) {
@@ -21,37 +28,41 @@ function DestinationPage({ title }) {
   );
 }
 
+function Sidebar({ currentPage, onNavigate }) {
+  return (
+    <aside className="sidebar">
+      <h2>CalSim 3 Copilot</h2>
+      <nav aria-label="Main navigation">
+        {sidebarDestinations.map(destination => (
+          <button
+            key={destination.id}
+            type="button"
+            onClick={() => onNavigate(destination.id)}
+            aria-current={currentPage === destination.id ? 'page' : undefined}
+          >
+            {destination.label}
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+function PageContent({ currentPage, onNavigate }) {
+  if (currentPage === 'dashboard') return <Dashboard onNavigate={onNavigate} />;
+  if (currentPage === 'data-explorer') return <DataExplorer />;
+  if (currentPage === 'compare-runs') return <CompareRuns />;
+
+  return <DestinationPage title={destinations[currentPage]} />;
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   return (
-    <div className="app-layout">
-      <aside className="sidebar">
-        <h2>CalSim 3 Copilot</h2>
-        <nav aria-label="Main navigation">
-          <button
-            type="button"
-            onClick={() => setCurrentPage('dashboard')}
-            aria-current={currentPage === 'dashboard' ? 'page' : undefined}
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentPage('data-explorer')}
-            aria-current={currentPage === 'data-explorer' ? 'page' : undefined}
-          >
-            Data Explorer
-          </button>
-        </nav>
-      </aside>
-      {currentPage === 'dashboard' ? (
-        <Dashboard onNavigate={setCurrentPage} />
-      ) : currentPage === 'data-explorer' ? (
-        <DataExplorer />
-      ) : (
-        <DestinationPage title={destinations[currentPage]} />
-      )}
+    <div className={`app-layout${currentPage === 'compare-runs' ? ' app-layout--compare-runs' : ''}`}>
+      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <PageContent currentPage={currentPage} onNavigate={setCurrentPage} />
     </div>
   );
 }
