@@ -1,0 +1,38 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import App from '../App.jsx';
+
+afterEach(cleanup);
+
+function openVariableSearch() {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
+}
+
+describe('Variable Search', () => {
+  it('opens from Dashboard with an active run and the page layout', () => {
+    openVariableSearch();
+
+    expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
+    expect(screen.getByText('Baseline 2025', { selector: 'p' })).toBeTruthy();
+    expect(screen.getByRole('searchbox', { name: 'Keyword' })).toBeTruthy();
+    for (const name of ['Run', 'Category', 'Units', 'Interval']) {
+      expect(screen.getByRole('combobox', { name })).toBeTruthy();
+    }
+    expect(screen.getByRole('table', { name: 'Variable search results' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Clear Filters' })).toBeTruthy();
+  });
+
+  it('connects the action buttons to the existing pages and supports returning', () => {
+    openVariableSearch();
+    fireEvent.click(within(screen.getByRole('main')).getByRole('button', { name: 'Compare Runs' }));
+    expect(screen.getByRole('heading', { name: 'Compare Simulation Runs' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Variable Search' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze Anomalies' }));
+    expect(screen.getByRole('heading', { name: 'Anomaly Detection' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
+    expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
+  });
+});
