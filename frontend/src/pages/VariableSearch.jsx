@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getVariableSearchData } from '../data/variableSearch.js';
 import { searchVariables } from '../features/variableSearch/searchVariables.js';
+import VariableResults from '../features/variableSearch/VariableResults.jsx';
 import './VariableSearch.css';
 
 const defaultFilters = { runId: '', category: '', units: '', interval: '' };
@@ -84,20 +85,7 @@ function VariableSearch({ onNavigate }) {
             <h2 id="variable-results-title">Search results</h2>
             <p role="status">{results.length} matching {results.length === 1 ? 'variable' : 'variables'}</p>
           </div>
-          <div className="variable-search-table-scroll" role="region" aria-label="Variable results table" tabIndex={0}>
-            <table>
-              <caption>Variable search results</caption>
-              <thead><tr><th scope="col">Identifier</th><th scope="col">Location</th></tr></thead>
-              <tbody>
-                {results.map(variable => (
-                  <tr key={variable.id}>
-                    <td>{variable.identifier}</td>
-                    <td>{variable.location}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <VariableResults variables={results} />
         </section>
 
         <div className="variable-search-actions">

@@ -130,4 +130,25 @@ describe('Variable Search', () => {
     expect(screen.getByRole('status').textContent).toBe('9 matching variables');
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(10);
   });
+
+  it('renders every results column with the correct run metadata and chart control', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
+      'Identifier', 'Location', 'Category', 'Units', 'Interval', 'Date range', 'Action',
+    ]);
+
+    const storageRow = within(table).getByRole('row', { name: /SAMPLE_SHASTA_STORAGE/ });
+    for (const text of ['Historical Drought Study', 'Shasta Lake', 'Storage', 'TAF', '1MON', 'Jan 2010 – Dec 2015']) {
+      expect(within(storageRow).getByText(text)).toBeTruthy();
+    }
+    expect(within(storageRow).getByRole('button', {
+      name: 'View Chart for SAMPLE_SHASTA_STORAGE in Historical Drought Study',
+    })).toBeTruthy();
+
+    const flowRow = within(table).getByRole('row', { name: /DELTA_OUTFLOW/ });
+    expect(within(flowRow).getByText('CFS')).toBeTruthy();
+    expect(within(flowRow).getByText('Flow')).toBeTruthy();
+  });
 });

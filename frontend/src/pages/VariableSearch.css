@@ -154,6 +154,7 @@
 
 .variable-search-results table {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
   text-align: left;
   font-size: 14px;
@@ -172,6 +173,23 @@
 
 .variable-search-results thead {
   background: #edf3f9;
+}
+
+.variable-search-identifier,
+.variable-search-run-name {
+  display: block;
+}
+
+.variable-search-run-name {
+  margin-top: 6px;
+  color: #536c85;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.variable-search-date-range,
+.variable-search-results button {
+  white-space: nowrap;
 }
 
 .variable-search-actions {

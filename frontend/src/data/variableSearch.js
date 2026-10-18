@@ -15,6 +15,7 @@ export function getVariableSearchData() {
   const variables = mockSimulationRuns.flatMap(run => run.variables.map(identifier => ({
     id: `${run.id}:${identifier}`,
     runId: run.id,
+    runName: run.name,
     identifier,
     ...variableMetadata[identifier],
     startMonth: run.startMonth,
