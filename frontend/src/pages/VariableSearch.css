@@ -200,6 +200,92 @@
   margin-top: 24px;
 }
 
+.variable-details h2 {
+  margin: 28px 0 20px;
+  font-size: 24px;
+}
+
+.variable-details h2:focus-visible {
+  outline: 3px solid #009eae;
+  outline-offset: 3px;
+}
+
+.variable-details-metadata {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 0 24px;
+  padding: 24px;
+  border: 1px solid #d2e0ef;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.variable-details-metadata dt {
+  color: #536c85;
+  font-size: 13px;
+}
+
+.variable-details-metadata dd {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.variable-chart-card {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #d2e0ef;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.variable-chart-card h3 {
+  margin: 0 0 20px;
+  font-size: 20px;
+}
+
+.variable-chart-scroll {
+  overflow-x: auto;
+}
+
+.variable-chart-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+}
+
+.variable-chart-label {
+  fill: #536c85;
+  font-size: 13px;
+}
+
+.variable-chart-grid {
+  stroke: #d2e0ef;
+  stroke-width: 1;
+}
+
+.variable-chart-axis {
+  stroke: #536c85;
+  stroke-width: 1;
+}
+
+.variable-chart-line {
+  fill: none;
+  stroke: #1978d5;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.variable-chart-card figcaption {
+  margin-top: 12px;
+  color: #536c85;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 1200px) {
   .variable-search-header {
     align-items: flex-start;
@@ -242,6 +328,10 @@
   }
 
   .variable-search-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .variable-details-metadata {
     grid-template-columns: 1fr;
   }
 }

@@ -151,4 +151,39 @@ describe('Variable Search', () => {
     expect(within(flowRow).getByText('CFS')).toBeTruthy();
     expect(within(flowRow).getByText('Flow')).toBeTruthy();
   });
+
+  it.each([
+    ['SAMPLE_SHASTA_STORAGE', 'historical-drought', 'Historical Drought Study', 'Shasta Lake', 'Storage', 'TAF', '1MON', 'Jan 2010 – Dec 2015'],
+    ['DELTA_OUTFLOW', 'baseline-2025', 'Baseline 2025', 'Sacramento–San Joaquin Delta', 'Flow', 'CFS', '1MON', 'Jan 2020 – Dec 2025'],
+    ['SACRAMENTO_FLOW', 'climate-stress-c', 'Climate Stress Test C', 'Sacramento River', 'Flow', 'CFS', '1DAY', 'Apr 2021 – Sep 2024'],
+  ])('opens %s details and returns to the same search and focused row', (identifier, runId, runName, location, category, units, interval, dateRange) => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: identifier } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: runId } });
+    const chartButton = screen.getByRole('button', { name: `View Chart for ${identifier} in ${runName}` });
+    fireEvent.click(chartButton);
+
+    const details = screen.getByRole('region', { name: 'Variable details' });
+    for (const text of [identifier, runName, location, category, units, interval, dateRange]) {
+      expect(within(details).getByText(text, { selector: 'dd' })).toBeTruthy();
+    }
+    expect(screen.getByRole('img', { name: `${identifier} in ${runName}` })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Variable details' }));
+    expect(screen.queryByRole('table')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
+    expect(screen.getByRole('searchbox').value).toBe(identifier);
+    expect(screen.getByRole('combobox', { name: 'Run' }).value).toBe(runId);
+    expect(screen.getByRole('status').textContent).toBe('1 matching variable');
+    expect(document.activeElement).toBe(chartButton);
+  });
+
+  it('updates the active-run header when the run filter changes', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
+    expect(screen.getByText('Historical Drought Study', { selector: 'p' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    expect(screen.getByText('Baseline 2025', { selector: 'p' })).toBeTruthy();
+  });
 });

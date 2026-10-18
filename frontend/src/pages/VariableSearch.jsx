@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getVariableSearchData } from '../data/variableSearch.js';
 import { searchVariables } from '../features/variableSearch/searchVariables.js';
 import VariableResults from '../features/variableSearch/VariableResults.jsx';
+import VariableDetails from '../features/variableSearch/VariableDetails.jsx';
 import './VariableSearch.css';
 
 const defaultFilters = { runId: '', category: '', units: '', interval: '' };
@@ -9,13 +10,25 @@ const defaultFilters = { runId: '', category: '', units: '', interval: '' };
 function VariableSearch({ onNavigate }) {
   const [data] = useState(getVariableSearchData);
   const [keyword, setKeyword] = useState('');
+  // Typing does not change the results until the form is submitted.
   const [submittedKeyword, setSubmittedKeyword] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
-  const activeRun = data.runs[0];
+  const [selectedVariable, setSelectedVariable] = useState(null);
+  const chartButtonRef = useRef(null);
+  const activeRun = data.runs.find(run => run.id === (selectedVariable?.runId || filters.runId)) ?? data.runs[0];
   const results = searchVariables(data.variables, submittedKeyword, filters);
   const categories = [...new Set(data.variables.map(variable => variable.category))].sort();
   const units = [...new Set(data.variables.map(variable => variable.units))].sort();
   const intervals = [...new Set(data.variables.map(variable => variable.interval))].sort();
+
+  useEffect(() => {
+    if (!selectedVariable) chartButtonRef.current?.focus();
+  }, [selectedVariable]);
+
+  function openDetails(variable, button) {
+    chartButtonRef.current = button;
+    setSelectedVariable(variable);
+  }
 
   function updateFilter(name, value) {
     setFilters({ ...filters, [name]: value });
@@ -33,7 +46,10 @@ function VariableSearch({ onNavigate }) {
         <p className="variable-search-active-run"><strong>Active run:</strong> {activeRun.name}</p>
       </header>
 
-      <div className="variable-search-content">
+      {selectedVariable && <VariableDetails variable={selectedVariable} onBack={() => setSelectedVariable(null)} />}
+
+      {/* Keep the search mounted so returning also preserves the controls and row focus. */}
+      <div className="variable-search-content" hidden={Boolean(selectedVariable)}>
         <p className="variable-search-subtitle">Find CalSim 3 variables by identifier or mapped location.</p>
 
         <section className="variable-search-controls" aria-label="Search and filters">
@@ -85,7 +101,7 @@ function VariableSearch({ onNavigate }) {
             <h2 id="variable-results-title">Search results</h2>
             <p role="status">{results.length} matching {results.length === 1 ? 'variable' : 'variables'}</p>
           </div>
-          <VariableResults variables={results} />
+          <VariableResults variables={results} onViewChart={openDetails} />
         </section>
 
         <div className="variable-search-actions">

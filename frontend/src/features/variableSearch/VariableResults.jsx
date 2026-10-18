@@ -1,6 +1,6 @@
 import { formatMonth } from './formatMonth.js';
 
-function VariableResults({ variables }) {
+function VariableResults({ variables, onViewChart }) {
   return (
     <div className="variable-search-table-scroll" role="region" aria-label="Variable results table" tabIndex={0}>
       <table>
@@ -29,7 +29,11 @@ function VariableResults({ variables }) {
               <td>{variable.interval}</td>
               <td className="variable-search-date-range">{formatMonth(variable.startMonth)} – {formatMonth(variable.endMonth)}</td>
               <td>
-                <button type="button" aria-label={`View Chart for ${variable.identifier} in ${variable.runName}`} disabled>
+                <button
+                  type="button"
+                  aria-label={`View Chart for ${variable.identifier} in ${variable.runName}`}
+                  onClick={event => onViewChart(variable, event.currentTarget)}
+                >
                   View Chart
                 </button>
               </td>
