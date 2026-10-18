@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { getVariableSearchData } from '../data/variableSearch.js';
+import { searchVariables } from '../features/variableSearch/searchVariables.js';
 import './VariableSearch.css';
 
 function VariableSearch({ onNavigate }) {
   const [data] = useState(getVariableSearchData);
+  const [keyword, setKeyword] = useState('');
+  const [submittedKeyword, setSubmittedKeyword] = useState('');
   const activeRun = data.runs[0];
+  const results = searchVariables(data.variables, submittedKeyword);
+
+  function handleSearch(event) {
+    event.preventDefault();
+    setSubmittedKeyword(keyword);
+  }
 
   return (
     <main className="variable-search-page" aria-labelledby="variable-search-title">
@@ -15,20 +24,25 @@ function VariableSearch({ onNavigate }) {
 
       <div className="variable-search-content">
         <p className="variable-search-subtitle">Find CalSim 3 variables by identifier or mapped location.</p>
-        <p className="variable-search-sample-note">Sample data for the UI prototype.</p>
 
         <section className="variable-search-controls" aria-label="Search and filters">
-          <form className="variable-search-form" onSubmit={event => event.preventDefault()}>
+          <form className="variable-search-form" role="search" aria-label="Variable search" onSubmit={handleSearch}>
             <label htmlFor="variable-keyword">Keyword</label>
             <div className="variable-search-input-row">
-              <input id="variable-keyword" type="search" placeholder="Search identifier or location, e.g. storage" />
-              <button type="submit" className="variable-search-primary" disabled>Search</button>
+              <input
+                id="variable-keyword"
+                type="search"
+                placeholder="Search identifier or location, e.g. storage"
+                value={keyword}
+                onChange={event => setKeyword(event.target.value)}
+              />
+              <button type="submit" className="variable-search-primary">Search</button>
             </div>
           </form>
 
           <div className="variable-search-filter-row">
             <label htmlFor="variable-run">Run
-              <select id="variable-run" disabled><option>{activeRun.name}</option></select>
+              <select id="variable-run" disabled><option>All runs</option></select>
             </label>
             <label htmlFor="variable-category">Category
               <select id="variable-category" disabled><option>All categories</option></select>
@@ -49,7 +63,14 @@ function VariableSearch({ onNavigate }) {
             <table>
               <caption>Variable search results</caption>
               <thead><tr><th scope="col">Identifier</th><th scope="col">Location</th></tr></thead>
-              <tbody />
+              <tbody>
+                {results.map(variable => (
+                  <tr key={variable.id}>
+                    <td>{variable.identifier}</td>
+                    <td>{variable.location}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         </section>

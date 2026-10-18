@@ -35,4 +35,42 @@ describe('Variable Search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
   });
+
+  it('waits for Search before matching identifiers, ignoring case and surrounding spaces', () => {
+    openVariableSearch();
+    const table = screen.getByRole('table');
+    const initialRowCount = within(table).getAllByRole('row').length;
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: '  sample_oroville_storage  ' } });
+    expect(within(table).getAllByRole('row')).toHaveLength(initialRowCount);
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+
+    expect(within(table).getAllByRole('row')).toHaveLength(4);
+    expect(within(table).getAllByText('SAMPLE_OROVILLE_STORAGE')).toHaveLength(3);
+    expect(within(table).queryByText('DELTA_OUTFLOW')).toBeNull();
+  });
+
+  it('matches mapped locations on form submission and restores all results for a blank keyword', () => {
+    openVariableSearch();
+    const input = screen.getByRole('searchbox');
+    fireEvent.change(input, { target: { value: 'san luis reservoir' } });
+    // Enter in the search field uses this same form submit handler.
+    fireEvent.submit(screen.getByRole('search'));
+
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+    expect(screen.getByText('SAN_LUIS_STORAGE')).toBeTruthy();
+
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(14);
+  });
+
+  it('finds storage identifiers with a partial keyword', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'storage' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(10);
+    expect(screen.queryByText('DELTA_OUTFLOW')).toBeNull();
+  });
 });

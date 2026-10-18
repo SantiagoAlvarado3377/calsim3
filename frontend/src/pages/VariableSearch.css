@@ -33,16 +33,10 @@
   padding: 24px 32px 36px;
 }
 
-.variable-search-subtitle,
-.variable-search-sample-note {
-  margin: 0 0 12px;
+.variable-search-subtitle {
+  margin: 0 0 24px;
   color: #536c85;
   line-height: 1.5;
-}
-
-.variable-search-sample-note {
-  font-size: 13px;
-  margin-bottom: 24px;
 }
 
 .variable-search-controls {
