@@ -80,7 +80,10 @@ function VariableSearch({ onNavigate }) {
         </section>
 
         <section className="variable-search-results" aria-labelledby="variable-results-title">
-          <h2 id="variable-results-title">Search results</h2>
+          <div className="variable-search-results-heading">
+            <h2 id="variable-results-title">Search results</h2>
+            <p role="status">{results.length} matching {results.length === 1 ? 'variable' : 'variables'}</p>
+          </div>
           <div className="variable-search-table-scroll" role="region" aria-label="Variable results table" tabIndex={0}>
             <table>
               <caption>Variable search results</caption>

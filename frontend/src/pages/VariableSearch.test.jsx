@@ -112,4 +112,22 @@ describe('Variable Search', () => {
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(4);
     expect(screen.getByText('DELTA_OUTFLOW')).toBeTruthy();
   });
+
+  it('keeps the matching count in sync with visible rows after search, filtering, and reset', () => {
+    openVariableSearch();
+    expect(screen.getByRole('status').textContent).toBe('13 matching variables');
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'storage' } });
+    expect(screen.getByRole('status').textContent).toBe('13 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    expect(screen.getByRole('status').textContent).toBe('9 matching variables');
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'climate-stress-c' } });
+    expect(screen.getByRole('status').textContent).toBe('1 matching variable');
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    expect(screen.getByRole('status').textContent).toBe('9 matching variables');
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(10);
+  });
 });

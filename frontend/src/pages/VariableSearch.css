@@ -125,9 +125,24 @@
   min-width: 0;
 }
 
-.variable-search-results h2 {
+.variable-search-results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin: 28px 0 16px;
+}
+
+.variable-search-results-heading h2 {
+  margin: 0;
   font-size: 20px;
+}
+
+.variable-search-results-heading p {
+  margin: 0;
+  color: #536c85;
+  font-size: 14px;
 }
 
 .variable-search-table-scroll {
