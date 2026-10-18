@@ -3,12 +3,22 @@ import { getVariableSearchData } from '../data/variableSearch.js';
 import { searchVariables } from '../features/variableSearch/searchVariables.js';
 import './VariableSearch.css';
 
+const defaultFilters = { runId: '', category: '', units: '', interval: '' };
+
 function VariableSearch({ onNavigate }) {
   const [data] = useState(getVariableSearchData);
   const [keyword, setKeyword] = useState('');
   const [submittedKeyword, setSubmittedKeyword] = useState('');
+  const [filters, setFilters] = useState(defaultFilters);
   const activeRun = data.runs[0];
-  const results = searchVariables(data.variables, submittedKeyword);
+  const results = searchVariables(data.variables, submittedKeyword, filters);
+  const categories = [...new Set(data.variables.map(variable => variable.category))].sort();
+  const units = [...new Set(data.variables.map(variable => variable.units))].sort();
+  const intervals = [...new Set(data.variables.map(variable => variable.interval))].sort();
+
+  function updateFilter(name, value) {
+    setFilters({ ...filters, [name]: value });
+  }
 
   function handleSearch(event) {
     event.preventDefault();
@@ -42,18 +52,30 @@ function VariableSearch({ onNavigate }) {
 
           <div className="variable-search-filter-row">
             <label htmlFor="variable-run">Run
-              <select id="variable-run" disabled><option>All runs</option></select>
+              <select id="variable-run" value={filters.runId} onChange={event => updateFilter('runId', event.target.value)}>
+                <option value="">All runs</option>
+                {data.runs.map(run => <option key={run.id} value={run.id}>{run.name}</option>)}
+              </select>
             </label>
             <label htmlFor="variable-category">Category
-              <select id="variable-category" disabled><option>All categories</option></select>
+              <select id="variable-category" value={filters.category} onChange={event => updateFilter('category', event.target.value)}>
+                <option value="">All categories</option>
+                {categories.map(category => <option key={category} value={category}>{category}</option>)}
+              </select>
             </label>
             <label htmlFor="variable-units">Units
-              <select id="variable-units" disabled><option>All units</option></select>
+              <select id="variable-units" value={filters.units} onChange={event => updateFilter('units', event.target.value)}>
+                <option value="">All units</option>
+                {units.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+              </select>
             </label>
             <label htmlFor="variable-interval">Interval
-              <select id="variable-interval" disabled><option>All intervals</option></select>
+              <select id="variable-interval" value={filters.interval} onChange={event => updateFilter('interval', event.target.value)}>
+                <option value="">All intervals</option>
+                {intervals.map(interval => <option key={interval} value={interval}>{interval}</option>)}
+              </select>
             </label>
-            <button type="button" disabled>Clear Filters</button>
+            <button type="button" onClick={() => setFilters(defaultFilters)}>Clear Filters</button>
           </div>
         </section>
 

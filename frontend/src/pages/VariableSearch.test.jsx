@@ -73,4 +73,43 @@ describe('Variable Search', () => {
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(10);
     expect(screen.queryByText('DELTA_OUTFLOW')).toBeNull();
   });
+
+  it.each([
+    ['Run', 'alternative-operations-a', 4],
+    ['Category', 'Flow', 4],
+    ['Units', 'TAF', 9],
+    ['Interval', '1DAY', 1],
+  ])('filters by %s immediately', (name, value, expectedCount) => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('combobox', { name }), { target: { value } });
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(expectedCount + 1);
+  });
+
+  it('combines the keyword and all filters, then clears only the dropdowns', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'storage' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    for (const [name, value] of [
+      ['Run', 'climate-stress-c'], ['Category', 'Storage'], ['Units', 'TAF'], ['Interval', '1MON'],
+    ]) {
+      fireEvent.change(screen.getByRole('combobox', { name }), { target: { value } });
+    }
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+    expect(screen.getByText('SAMPLE_FOLSOM_STORAGE')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    for (const name of ['Run', 'Category', 'Units', 'Interval']) {
+      expect(screen.getByRole('combobox', { name }).value).toBe('');
+    }
+    expect(screen.getByRole('searchbox').value).toBe('storage');
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(10);
+  });
+
+  it('keeps an unsubmitted keyword from being applied by a dropdown change', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Shasta' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'baseline-2025' } });
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(4);
+    expect(screen.getByText('DELTA_OUTFLOW')).toBeTruthy();
+  });
 });
