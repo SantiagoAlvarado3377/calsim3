@@ -1,0 +1,8 @@
+/* Styles scoped to the Import Data page.
+   Prefixing classes with "import-data" avoids clashing with teammates' page styles,
+   since all CSS files end up global in a Vite app. */
+
+.import-data-page {
+  padding: 24px;      /* breathing room from the sidebar and window edges */
+  flex: 1;            /* fill the remaining space next to the sidebar (assumes app-layout is flex) */
+}

@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import DataExplorer from './pages/DataExplorer';
 import CompareRuns from './pages/CompareRuns';
 import VariableSearch from './pages/VariableSearch';
+import ImportData from './pages/ImportData'; 
 import './App.css';
 
 const destinations = {
@@ -17,6 +18,8 @@ const sidebarDestinations = [
   { id: 'data-explorer', label: 'Data Explorer' },
   { id: 'variable-search', label: 'Variable Search' },
   { id: 'compare-runs', label: 'Compare Runs' },
+  // import data:
+  { id: 'import-data', label: 'Import Data' }
 ];
 
 // Only navigation destinations are provided here; their features belong to later work.
@@ -56,6 +59,8 @@ function PageContent({ currentPage, onNavigate }) {
   if (currentPage === 'data-explorer') return <DataExplorer />;
   if (currentPage === 'compare-runs') return <CompareRuns />;
   if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
+  // import data:
+  if (currentPage === 'import-data') return <ImportData onNavigate={onNavigate} />;
 
   return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
 }
