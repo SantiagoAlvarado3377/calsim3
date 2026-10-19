@@ -1,0 +1,337 @@
+/* Import Data page styles.
+   Colors, radii and sizes are copied from VariableSearch.css so the pages
+   look like one app (there are no shared CSS variables yet):
+     #1978d5 primary blue     #1265b7 primary hover
+     #d2e0ef / #cbdced borders #536c85 muted text
+     #009eae focus outline     #f5f8fc light panel background
+   Every class starts with "import-data-" so nothing here can accidentally
+   restyle another page. */
+ 
+.import-data-page {
+  flex: 1; /* fill the space next to the sidebar */
+  min-width: 0; /* lets long file names wrap instead of stretching the page */
+}
+ 
+/* ---------- Header (same layout as Variable Search) ---------- */
+ 
+.import-data-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 104px;
+  padding: 20px 38px;
+  background: #fff;
+  border-bottom: 1px solid #d2e0ef;
+}
+ 
+.import-data-header h1 {
+  margin: 0;
+  color: #1c2c3b;
+  font-size: 30px;
+}
+ 
+.import-data-active-run {
+  margin: 0;
+  padding: 14px 20px;
+  border: 1px solid #cbdced;
+  border-radius: 14px;
+  background: #f5f8fc;
+  color: #173b60;
+}
+ 
+/* ---------- Page body + white card ---------- */
+ 
+.import-data-content {
+  padding: 24px 32px 36px;
+}
+ 
+.import-data-subtitle {
+  margin: 0 0 24px;
+  color: #536c85;
+  line-height: 1.5;
+}
+ 
+.import-data-card {
+  max-width: 1040px;
+  padding: 28px;
+  border: 1px solid #d2e0ef;
+  border-radius: 16px;
+  background: #fff;
+}
+ 
+/* ---------- Drop zone (SCRUM-115) ---------- */
+ 
+.import-data-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 24px;
+  border: 2px dashed #cbdced; /* the dashed border from the Figma */
+  border-radius: 14px;
+  background: #fbfcfe;
+  text-align: center;
+  /* animate the highlight in/out instead of snapping */
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+ 
+.import-data-dropzone h2 {
+  margin: 8px 0 0;
+  color: #1c2c3b;
+  font-size: 18px;
+}
+ 
+.import-data-dropzone-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e3effb;
+  color: #1978d5;
+}
+ 
+.import-data-dropzone-hint {
+  margin: 0;
+  color: #536c85;
+  font-size: 13px;
+}
+ 
+/* :empty hides the alert paragraph when there's no error text, so it takes
+   no space but still exists for screen readers (see DssDropZone.jsx). */
+.import-data-dropzone-error:empty {
+  display: none;
+}
+ 
+.import-data-dropzone-error {
+  margin: 4px 0 0;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+}
+ 
+.import-data-dropzone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+ 
+/* --- Drop zone states, driven by data-state="..." in DssDropZone.jsx --- */
+ 
+/* SCRUM-116: highlight while a file is dragged over the zone */
+.import-data-dropzone[data-state='dragging'] {
+  border-color: #1978d5;
+  border-style: solid;
+  background: #eaf3fd;
+}
+ 
+/* SCRUM-118: error state */
+.import-data-dropzone[data-state='error'] {
+  border-color: #e5a5a0;
+  background: #fef6f5;
+}
+ 
+.import-data-dropzone[data-state='error'] .import-data-dropzone-icon {
+  background: #fde4e2;
+  color: #b42318;
+}
+ 
+/* SCRUM-119: a valid file is selected */
+.import-data-dropzone[data-state='selected'] {
+  border-color: #8fc9b9;
+  border-style: solid;
+  background: #f4fbf8;
+}
+ 
+.import-data-dropzone[data-state='selected'] .import-data-dropzone-icon {
+  background: #ddf2eb;
+  color: #11795c;
+}
+ 
+.import-data-file-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+ 
+.import-data-file-name {
+  color: #173b60;
+  font-weight: 700;
+  overflow-wrap: anywhere; /* long names like baseline_run_final_v2.dss wrap */
+}
+ 
+.import-data-file-size {
+  color: #536c85;
+  font-size: 13px;
+}
+ 
+/* ---------- Run name / Description fields ---------- */
+ 
+.import-data-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* two equal columns */
+  gap: 18px;
+  margin-top: 24px;
+}
+ 
+/* label wraps its input, so grid stacks "Run name" above the box */
+.import-data-fields label {
+  display: grid;
+  gap: 10px;
+  color: #243447;
+  font-size: 14px;
+  font-weight: 700;
+}
+ 
+/* ---------- Shared input + button look (copied from Variable Search) ---------- */
+ 
+.import-data-page input,
+.import-data-page button {
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid #cbdced;
+  border-radius: 8px;
+  background: #fff;
+  color: #243447;
+  font: inherit;
+  font-size: 14px;
+}
+ 
+.import-data-page input {
+  width: 100%;
+  min-width: 0;
+  font-weight: 400;
+}
+ 
+.import-data-page input::placeholder {
+  color: #8a9bb0;
+}
+ 
+.import-data-page button {
+  font-weight: 600;
+  cursor: pointer;
+}
+ 
+.import-data-page button:hover:not(:disabled) {
+  background: #edf3f9;
+}
+ 
+.import-data-page .import-data-primary {
+  min-width: 130px;
+  border-color: #1978d5;
+  background: #1978d5;
+  color: #fff;
+}
+ 
+.import-data-page .import-data-primary:hover:not(:disabled) {
+  background: #1265b7;
+}
+ 
+/* disabled Import button = the pale blue button in the Figma */
+.import-data-page :disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+ 
+.import-data-page :is(input, button):focus-visible {
+  outline: 3px solid #009eae;
+  outline-offset: 3px;
+}
+ 
+/* ---------- Info banner, notes, status ---------- */
+ 
+.import-data-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #d2e0ef;
+  border-radius: 8px;
+  background: #edf3f9;
+  color: #243447;
+  font-size: 14px;
+}
+ 
+.import-data-note svg {
+  flex-shrink: 0; /* keep the icon from squishing on narrow screens */
+  color: #536c85;
+}
+ 
+.import-data-prototype-note {
+  margin: 14px 0 0;
+  color: #536c85;
+  font-size: 12px;
+}
+ 
+.import-data-status:empty {
+  display: none;
+}
+ 
+.import-data-status {
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #ddf2eb;
+  color: #0d5f48;
+  font-size: 14px;
+  font-weight: 600;
+}
+ 
+.import-data-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+ 
+/* ---------- Smaller screens (same breakpoints as Variable Search) ---------- */
+ 
+@media (max-width: 1200px) {
+  .import-data-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+ 
+@media (max-width: 720px) {
+  /* app-layout--import-data is added by App.jsx when this page is open */
+  .app-layout--import-data {
+    flex-direction: column;
+  }
+ 
+  .app-layout--import-data .sidebar {
+    width: 100%;
+    padding: 16px 20px;
+  }
+ 
+  .import-data-header {
+    padding: 24px 20px;
+  }
+ 
+  .import-data-content {
+    padding: 24px 18px;
+  }
+ 
+  .import-data-card {
+    padding: 18px;
+  }
+ 
+  /* stack Run name above Description */
+  .import-data-fields {
+    grid-template-columns: 1fr;
+  }
+ 
+  /* full-width Cancel / Import buttons are easier to tap */
+  .import-data-actions button {
+    flex: 1;
+  }
+}
+ 
