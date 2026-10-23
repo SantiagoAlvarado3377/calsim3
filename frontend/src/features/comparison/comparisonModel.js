@@ -136,6 +136,28 @@ export function createComparisonState(runs) {
 }
 
 export function transitionComparison(state, action, runs) {
+  if (action.type === 'swap-runs') {
+    const baselineRun = findRun(runs, state.baselineRunId);
+    const alternativeRun = findRun(runs, state.alternativeRunId);
+
+    if (!baselineRun || !alternativeRun) {
+      return { ...state, message: 'The selected simulation run is unavailable.' };
+    }
+
+    if (baselineRun.id === alternativeRun.id) {
+      return { ...state, message: SAME_RUN_MESSAGE };
+    }
+
+    return reconcileSelections(
+      {
+        ...state,
+        baselineRunId: alternativeRun.id,
+        alternativeRunId: baselineRun.id,
+      },
+      runs,
+    );
+  }
+
   if (action.type === 'select-run') {
     const isBaseline = action.role === 'baseline';
     const oppositeRunId = isBaseline ? state.alternativeRunId : state.baselineRunId;

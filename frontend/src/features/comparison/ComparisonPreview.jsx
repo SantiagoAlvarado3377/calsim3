@@ -3,11 +3,21 @@ import { formatMonthRange } from './comparisonModel.js';
 const baselinePoints = '52,310 128,254 205,272 282,204 359,180 436,218 513,163 590,198 667,148 744,170 821,126 898,154';
 const alternativePoints = '52,300 128,236 205,260 282,182 359,164 436,205 513,108 590,180 667,133 744,163 821,116 898,151';
 
-function PrototypeAction({ children }) {
+function PrototypeAction({
+  children,
+  disabled = true,
+  onClick,
+  showPrototypeLabel = true,
+}) {
   return (
-    <button className="comparison-prototype-action" type="button" disabled>
+    <button
+      className="comparison-prototype-action"
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+    >
       {children}
-      <span>Prototype only</span>
+      {showPrototypeLabel ? <span>Prototype only</span> : null}
     </button>
   );
 }

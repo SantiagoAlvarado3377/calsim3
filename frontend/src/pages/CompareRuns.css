@@ -209,6 +209,10 @@
   cursor: not-allowed;
 }
 
+.comparison-prototype-action:not(:disabled) {
+  cursor: pointer;
+}
+
 .comparison-prototype-action span {
   color: #6b8198;
   font-size: 10px;
