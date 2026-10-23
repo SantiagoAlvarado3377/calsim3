@@ -17,6 +17,11 @@ function CompareRuns({ runs = mockSimulationRuns }) {
   );
   const [dateExpanded, setDateExpanded] = useState(false);
   const view = deriveComparisonView(state, runs);
+  const canSwapRuns = Boolean(
+    view.baselineRun &&
+      view.alternativeRun &&
+      view.baselineRun.id !== view.alternativeRun.id,
+  );
 
   const selectRun = (role, runId) => {
     dispatch({ type: 'select-run', role, runId });
@@ -25,6 +30,11 @@ function CompareRuns({ runs = mockSimulationRuns }) {
 
   const updateDateRange = range => {
     dispatch({ type: 'select-date-range', range });
+  };
+
+  const handleSwapRuns = () => {
+    dispatch({ type: 'swap-runs' });
+    setDateExpanded(false);
   };
 
   return (
@@ -59,7 +69,13 @@ function CompareRuns({ runs = mockSimulationRuns }) {
         </div>
 
         <div className="comparison-actions">
-          <PrototypeAction>Swap Runs</PrototypeAction>
+          <PrototypeAction
+            disabled={!canSwapRuns}
+            onClick={handleSwapRuns}
+            showPrototypeLabel={false}
+          >
+            Swap Runs
+          </PrototypeAction>
           <PrototypeAction>Apply Comparison</PrototypeAction>
         </div>
 
