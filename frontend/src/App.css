@@ -45,6 +45,7 @@
 }
 
 .welcome,
+.data-explorer-content,
 .destination-content {
   padding: 32px;
 }
@@ -67,4 +68,43 @@
     display: flex;
     gap: 8px;
   }
+}
+
+.data-explorer-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.data-explorer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+
+.data-explorer-field label {
+  font-weight: 600;
+}
+
+.data-explorer-field select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #aab7c4;
+  border-radius: 6px;
+  background: white;
+  color: #243447;
+  font: inherit;
+}
+
+.data-explorer-field select:disabled {
+  background: #e9edf2;
+  cursor: not-allowed;
+}
+
+.data-explorer-field select:focus-visible {
+  outline: 2px solid #285477;
+  outline-offset: 2px;
 }
