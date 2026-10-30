@@ -15,7 +15,7 @@ const quickActions = [
   { label: 'Detect anomalies', destination: 'anomaly-detection' },
 ];
 
-function Dashboard({ summary = emptySummary, onNavigate }) {
+function Dashboard({ summary = emptySummary, onNavigate, runs = [], activeRunId = '', onActiveRunChange }) {
   const formatCount = value => new Intl.NumberFormat().format(value);
   const lastImport = summary.lastImport
     ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(summary.lastImport))
@@ -31,6 +31,20 @@ function Dashboard({ summary = emptySummary, onNavigate }) {
     <main className="dashboard" aria-labelledby="dashboard-title">
       <header className="dashboard-header">
         <h1 id="dashboard-title">Dashboard</h1>
+        <label className="dashboard-active-run" htmlFor="dashboard-active-run">
+          <span>Active run:</span>
+          <select
+            id="dashboard-active-run"
+            value={activeRunId}
+            title={runs.find(run => run.id === activeRunId)?.name ?? 'No imported runs'}
+            disabled={runs.length === 0}
+            onChange={event => onActiveRunChange(event.target.value)}
+          >
+            {runs.length === 0
+              ? <option value="">No imported runs</option>
+              : runs.map(run => <option key={run.id} value={run.id}>{run.name}</option>)}
+          </select>
+        </label>
       </header>
       <div className="dashboard-content">
         <p className="dashboard-subtitle">Overview of imported CalSim 3 simulation results</p>
