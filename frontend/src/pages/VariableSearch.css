@@ -3,32 +3,6 @@
   min-width: 0;
 }
 
-.variable-search-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 104px;
-  padding: 20px 38px;
-  background: #fff;
-  border-bottom: 1px solid #d2e0ef;
-}
-
-.variable-search-header h1 {
-  margin: 0;
-  color: #1c2c3b;
-  font-size: 30px;
-}
-
-.variable-search-active-run {
-  margin: 0;
-  padding: 14px 20px;
-  border: 1px solid #cbdced;
-  border-radius: 14px;
-  background: #f5f8fc;
-  color: #173b60;
-}
-
 .variable-search-content {
   padding: 24px 32px 36px;
 }
@@ -287,11 +261,6 @@
 }
 
 @media (max-width: 1200px) {
-  .variable-search-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .variable-search-filter-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -309,10 +278,6 @@
 
   .app-layout--variable-search .sidebar h2 {
     margin-bottom: 12px;
-  }
-
-  .variable-search-header {
-    padding: 24px 20px;
   }
 
   .variable-search-content {

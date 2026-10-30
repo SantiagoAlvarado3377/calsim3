@@ -75,7 +75,7 @@ describe('Import Data page', () => {
     openImportData();
  
     expect(screen.getByRole('heading', { level: 1, name: 'Import Data' })).toBeTruthy();
-    expect(page().getByText('Baseline 2025', { selector: 'p' })).toBeTruthy(); // active run pill
+    expect(page().getByRole('combobox', { name: 'Active run:' }).disabled).toBe(true);
     expect(page().getByRole('heading', { name: 'Drag and drop an HEC-DSS file here' })).toBeTruthy();
     expect(page().getByText('Supported format: .dss')).toBeTruthy();
     expect(page().getByRole('button', { name: 'Browse Files' })).toBeTruthy();

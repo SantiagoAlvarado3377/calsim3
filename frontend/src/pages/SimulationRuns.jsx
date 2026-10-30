@@ -1,3 +1,4 @@
+import PageHeader from '../components/PageHeader.jsx';
 import './SimulationRuns.css';
 
 // Figma sample data for SCRUM-135. No file import or backend connection yet.
@@ -10,9 +11,7 @@ const sampleRuns = [
 function SimulationRuns({ runs = sampleRuns }) {
   return (
     <main className="simulation-runs" aria-labelledby="simulation-runs-title">
-      <header className="simulation-runs-header">
-        <h1 id="simulation-runs-title">Simulation Runs</h1>
-      </header>
+      <PageHeader id="simulation-runs-title" title="Simulation Runs" />
       <div className="simulation-runs-content">
         <p className="simulation-runs-subtitle">Saved runs remain separate and linked to their source files</p>
         <p className="simulation-runs-note">Sample data for prototype</p>

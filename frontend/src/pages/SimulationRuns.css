@@ -4,18 +4,6 @@
   background: #f5f7fa;
 }
 
-.simulation-runs-header {
-  padding: 32px 40px;
-  background: white;
-  border-bottom: 1px solid #d0ddec;
-}
-
-.simulation-runs-header h1 {
-  margin: 0;
-  color: #1c2d3e;
-  font-size: 36px;
-}
-
 .simulation-runs-content { padding: 28px 40px; }
 
 .simulation-runs-subtitle {
@@ -68,7 +56,5 @@
   .app-layout--simulation-runs { flex-direction: column; }
   .app-layout--simulation-runs .sidebar { width: 100%; padding: 16px 20px; }
   .app-layout--simulation-runs .sidebar h2 { margin-bottom: 12px; }
-  .simulation-runs-header { padding: 24px 20px; }
-  .simulation-runs-header h1 { font-size: 28px; }
   .simulation-runs-content { padding: 20px; }
 }

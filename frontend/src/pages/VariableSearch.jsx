@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import PageHeader from '../components/PageHeader.jsx';
 import { getVariableSearchData } from '../data/variableSearch.js';
 import { searchVariables } from '../features/variableSearch/searchVariables.js';
 import VariableResults from '../features/variableSearch/VariableResults.jsx';
@@ -15,7 +16,6 @@ function VariableSearch({ onNavigate }) {
   const [filters, setFilters] = useState(defaultFilters);
   const [selectedVariable, setSelectedVariable] = useState(null);
   const chartButtonRef = useRef(null);
-  const activeRun = data.runs.find(run => run.id === (selectedVariable?.runId || filters.runId)) ?? data.runs[0];
   const results = searchVariables(data.variables, submittedKeyword, filters);
   const categories = [...new Set(data.variables.map(variable => variable.category))].sort();
   const units = [...new Set(data.variables.map(variable => variable.units))].sort();
@@ -41,10 +41,7 @@ function VariableSearch({ onNavigate }) {
 
   return (
     <main className="variable-search-page" aria-labelledby="variable-search-title">
-      <header className="variable-search-header">
-        <h1 id="variable-search-title">Variable and Location Search</h1>
-        <p className="variable-search-active-run"><strong>Active run:</strong> {activeRun.name}</p>
-      </header>
+      <PageHeader id="variable-search-title" title="Variable and Location Search" />
 
       {selectedVariable && <VariableDetails variable={selectedVariable} onBack={() => setSelectedVariable(null)} />}
 

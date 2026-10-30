@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PageHeader from '../components/PageHeader.jsx';
 
 // sample options used until imported simulation data is connected
 const sampleRuns = [
@@ -35,47 +36,46 @@ function DataExplorer() {
 
   return (
     <main className="data-explorer" aria-labelledby="data-explorer-title">
-      <header className="data-explorer-header">
-        <h1 id="data-explorer-title">Data Explorer</h1>
-      </header>
+      <PageHeader id="data-explorer-title" title="Data Explorer" />
+      <div className="data-explorer-content">
+        <p>Sample data shown for development.</p>
 
-      <p>Sample data shown for development.</p>
+        <div className="data-explorer-selectors">
+          <div className="data-explorer-field">
+            <label htmlFor="simulation-run">Simulation run</label>
+            <select
+              id="simulation-run"
+              value={selectedRunId}
+              onChange={handleRunChange}
+            >
+              <option value="">Choose a simulation run</option>
+              {sampleRuns.map((run) => (
+                <option key={run.id} value={run.id}>
+                  {run.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="data-explorer-selectors">
-        <div className="data-explorer-field">
-          <label htmlFor="simulation-run">Simulation run</label>
-          <select
-            id="simulation-run"
-            value={selectedRunId}
-            onChange={handleRunChange}
-          >
-            <option value="">Choose a simulation run</option>
-            {sampleRuns.map((run) => (
-              <option key={run.id} value={run.id}>
-                {run.name}
+          <div className="data-explorer-field">
+            <label htmlFor="simulation-variable">Variable</label>
+            <select
+              id="simulation-variable"
+              value={selectedVariableId}
+              onChange={(event) => setSelectedVariableId(event.target.value)}
+              disabled={!selectedRun}
+            >
+              <option value="">
+                {selectedRun ? 'Choose a variable' : 'Choose a run first'}
               </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="data-explorer-field">
-          <label htmlFor="simulation-variable">Variable</label>
-          <select
-            id="simulation-variable"
-            value={selectedVariableId}
-            onChange={(event) => setSelectedVariableId(event.target.value)}
-            disabled={!selectedRun}
-          >
-            <option value="">
-              {selectedRun ? 'Choose a variable' : 'Choose a run first'}
-            </option>
-            {/* shows only the variables available in the selected run */}
-            {selectedRun?.variables.map((variable) => (
-              <option key={variable.id} value={variable.id}>
-                {variable.name}
-              </option>
-            ))}
-          </select>
+              {/* shows only the variables available in the selected run */}
+              {selectedRun?.variables.map((variable) => (
+                <option key={variable.id} value={variable.id}>
+                  {variable.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </main>
