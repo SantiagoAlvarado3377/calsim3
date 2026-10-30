@@ -5,8 +5,8 @@ import App from '../App.jsx';
 
 afterEach(cleanup);
 
-function openVariableSearch() {
-  render(<App />);
+function openVariableSearch(importedRuns) {
+  render(<App importedRuns={importedRuns} />);
   fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
 }
 
@@ -15,7 +15,7 @@ describe('Variable Search', () => {
     openVariableSearch();
 
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
-    expect(screen.getByText('Baseline 2025', { selector: 'p' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Active run:' }).disabled).toBe(true);
     expect(screen.getByRole('searchbox', { name: 'Keyword' })).toBeTruthy();
     for (const name of ['Run', 'Category', 'Units', 'Interval']) {
       expect(screen.getByRole('combobox', { name })).toBeTruthy();
@@ -179,11 +179,11 @@ describe('Variable Search', () => {
     expect(document.activeElement).toBe(chartButton);
   });
 
-  it('updates the active-run header when the run filter changes', () => {
-    openVariableSearch();
+  it('keeps the workspace active-run header separate from the local run filter', () => {
+    openVariableSearch([{ id: 'alternative-operations-a', name: 'Alternative Operations A' }]);
     fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
-    expect(screen.getByText('Historical Drought Study', { selector: 'p' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Active run:' }).value).toBe('alternative-operations-a');
     fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
-    expect(screen.getByText('Baseline 2025', { selector: 'p' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Active run:' }).value).toBe('alternative-operations-a');
   });
 });

@@ -22,7 +22,7 @@ From this directory, run `npm install` and `npm run dev`. Open **Search variable
 - Search submits with the Search button or Enter and matches identifier or mapped location text, ignoring case.
 - Dropdowns apply immediately. Clear Filters resets all four dropdowns and keeps the keyword.
 - View Chart opens metadata and a chart for that specific variable and run. Return to variable search preserves the controls and restores focus to the row's button.
-- Run names come from the existing comparison fixtures. The header follows a selected run or chart; with All runs selected, it displays Baseline 2025 until shared active-run state is available.
+- Search data comes from the existing comparison fixtures. The shared page header displays the workspace active run; the search Run filter and chart details retain their own run context. With no imported runs connected, the shared header displays No imported runs.
 - Metadata and chart values are mocks behind `getVariableSearchData()` and `getVariableChartData()` in `src/data/variableSearch.js`. API integration and empty/error screens belong to SCRUM-146/147.
 
 Run `npm test`, `npm run lint`, and `npm run build` to check the feature. Tests cover navigation, submitted searches, combined filters, table metadata, details/return focus, and monthly/daily chart data.

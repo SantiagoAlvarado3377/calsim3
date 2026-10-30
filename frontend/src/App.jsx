@@ -5,6 +5,8 @@ import CompareRuns from './pages/CompareRuns';
 import VariableSearch from './pages/VariableSearch';
 import ImportData from './pages/ImportData'; 
 import SimulationRuns from './pages/SimulationRuns';
+import PageHeader from './components/PageHeader.jsx';
+import { ActiveRunContext } from './components/ActiveRunContext.js';
 import './App.css';
 
 const destinations = {
@@ -27,10 +29,10 @@ const sidebarDestinations = [
 function DestinationPage({ title, onNavigate }) {
     return (
         <main className="data-explorer" aria-labelledby="destination-title">
-            <header className="data-explorer-header">
-                <h1 id="destination-title">{title}</h1>
-            </header>
-            <button type="button" onClick={() => onNavigate('variable-search')}>Return to variable search</button>
+            <PageHeader id="destination-title" title={title} />
+            <div className="destination-content">
+                <button type="button" onClick={() => onNavigate('variable-search')}>Return to variable search</button>
+            </div>
         </main>
     );
 }
@@ -55,14 +57,13 @@ function Sidebar({ currentPage, onNavigate }) {
     );
 }
 
-function PageContent({ currentPage, onNavigate, importedRuns, activeRunId, onActiveRunChange }) {
+function PageContent({ currentPage, onNavigate, importedRuns, recentActivity }) {
     if (currentPage === 'dashboard') {
         return (
             <Dashboard
                 onNavigate={onNavigate}
                 runs={importedRuns}
-                activeRunId={activeRunId}
-                onActiveRunChange={onActiveRunChange}
+                activities={recentActivity}
             />
         );
     }
@@ -75,7 +76,7 @@ function PageContent({ currentPage, onNavigate, importedRuns, activeRunId, onAct
     return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
 }
 
-function App({ importedRuns = [] }) {
+function App({ importedRuns = [], recentActivity = [] }) {
     const [currentPage, setCurrentPage] = useState('dashboard');
     // Keep the selection above the pages so navigation doesn't reset it.
     // Imported-run storage can supply importedRuns when it is connected.
@@ -85,16 +86,17 @@ function App({ importedRuns = [] }) {
         : importedRuns[0]?.id ?? '';
 
     return (
-        <div className={`app-layout app-layout--${currentPage}`}>
-            <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
-            <PageContent
-                currentPage={currentPage}
-                onNavigate={setCurrentPage}
-                importedRuns={importedRuns}
-                activeRunId={activeRunId}
-                onActiveRunChange={setSelectedRunId}
-            />
-        </div>
+        <ActiveRunContext.Provider value={{ runs: importedRuns, activeRunId, onActiveRunChange: setSelectedRunId }}>
+            <div className={`app-layout app-layout--${currentPage}`}>
+                <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+                <PageContent
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    importedRuns={importedRuns}
+                    recentActivity={recentActivity}
+                />
+            </div>
+        </ActiveRunContext.Provider>
     );
 }
 

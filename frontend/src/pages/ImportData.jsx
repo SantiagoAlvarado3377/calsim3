@@ -12,7 +12,7 @@
 // when a later story needs to send the user somewhere after importing.
  
 import { useEffect, useState } from 'react';
-import { mockSimulationRuns } from '../data/mockSimulationRuns.js';
+import PageHeader from '../components/PageHeader.jsx';
 import DssDropZone from '../features/importData/DssDropZone.jsx';
 import { validateDssFile } from '../features/importData/validateDssFile.js';
 import './ImportData.css'; // page-specific styles, same pattern as the other pages
@@ -20,10 +20,6 @@ import './ImportData.css'; // page-specific styles, same pattern as the other pa
 // Starting values for the text fields. Kept in one object so Cancel can reset
 // everything in one line.
 const emptyFields = { runName: '', description: '' };
- 
-// Same rule Variable Search uses: with no app-wide "active run" yet, show the
-// first mock run so both pages agree.
-const activeRunName = mockSimulationRuns[0]?.name ?? 'None';
  
 function InfoIcon() {
   return (
@@ -127,12 +123,7 @@ function ImportData() {
  
   return (
     <main className="import-data-page" aria-labelledby="import-data-title">
-      {/* Header matches the Variable Search layout: title on the left,
-          active run pill on the right. */}
-      <header className="import-data-header">
-        <h1 id="import-data-title">Import Data</h1>
-        <p className="import-data-active-run"><strong>Active run:</strong> {activeRunName}</p>
-      </header>
+      <PageHeader id="import-data-title" title="Import Data" />
  
       <div className="import-data-content">
         <p className="import-data-subtitle">

@@ -1,4 +1,5 @@
 import { useReducer, useState } from 'react';
+import PageHeader from '../components/PageHeader.jsx';
 import { mockSimulationRuns } from '../data/mockSimulationRuns.js';
 import { ComparisonControls } from '../features/comparison/ComparisonControls.jsx';
 import { ComparisonPreview, PrototypeAction } from '../features/comparison/ComparisonPreview.jsx';
@@ -29,12 +30,7 @@ function CompareRuns({ runs = mockSimulationRuns }) {
 
   return (
     <main className="comparison-page" aria-labelledby="comparison-title">
-      <header className="comparison-header">
-        <h1 id="comparison-title">Compare Simulation Runs</h1>
-        <p className="comparison-active-run">
-          <span>Active run:</span> {view.baselineRun?.name ?? 'No baseline selected'}
-        </p>
-      </header>
+      <PageHeader id="comparison-title" title="Compare Simulation Runs" />
 
       <div className="comparison-workspace">
         <ComparisonControls

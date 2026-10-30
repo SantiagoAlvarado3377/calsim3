@@ -5,46 +5,6 @@
   color: #1c2c3b;
 }
 
-.comparison-header {
-  min-height: 104px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  padding: 20px 38px;
-  background: #fff;
-  border-bottom: 1px solid #d2e0ef;
-}
-
-.comparison-header h1 {
-  margin: 0;
-  color: #172839;
-  font-size: clamp(26px, 2.15vw, 38px);
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-}
-
-.comparison-active-run {
-  width: min(350px, 34vw);
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 14px 24px;
-  border: 1px solid #cbdced;
-  border-radius: 15px;
-  background: #f5f8fc;
-  color: #173b60;
-  font-size: 16px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.comparison-active-run span {
-  margin-right: 4px;
-}
-
 .comparison-workspace {
   padding: 36px 32px 42px;
 }
@@ -426,17 +386,6 @@
 }
 
 @media (max-width: 1000px) {
-  .comparison-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .comparison-active-run {
-    width: 100%;
-    max-width: 420px;
-    justify-content: flex-start;
-  }
-
   .comparison-results {
     grid-template-columns: 1fr;
   }
@@ -458,19 +407,6 @@
 }
 
 @media (max-width: 720px) {
-  .comparison-header {
-    min-height: 0;
-    padding: 24px 20px;
-  }
-
-  .comparison-header h1 {
-    font-size: 28px;
-  }
-
-  .comparison-active-run {
-    max-width: none;
-  }
-
   .comparison-workspace {
     padding: 26px 18px 34px;
   }

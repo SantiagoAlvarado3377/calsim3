@@ -42,13 +42,11 @@
 .welcome {
   flex: 1;
   min-width: 0;
-  padding: 32px;
 }
 
-.data-explorer-header h1 {
-  margin: 0;
-  color: #17324d;
-  font-size: 30px;
+.welcome,
+.destination-content {
+  padding: 32px;
 }
 
 @media (max-width: 720px) {
