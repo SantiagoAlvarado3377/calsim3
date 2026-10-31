@@ -166,6 +166,33 @@
   white-space: nowrap;
 }
 
+/* Loading, empty, and error states (SCRUM-147, SCRUM-158). Placeholder styling. */
+.variable-search-state {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 20px 24px;
+  border: 1px solid #d2e0ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #243447;
+}
+
+.variable-search-state p {
+  margin: 0;
+}
+
+.variable-search-state--error {
+  border-color: #c0392b;
+  background: #fdf2f1;
+}
+
+.variable-search-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .variable-search-actions {
   display: flex;
   justify-content: flex-end;
