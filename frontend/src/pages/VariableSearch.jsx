@@ -1,29 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { ActiveRunContext } from '../components/ActiveRunContext.js';
 import PageHeader from '../components/PageHeader.jsx';
-import { getVariableSearchData } from '../data/variableSearch.js';
 import { searchVariables } from '../features/variableSearch/searchVariables.js';
+import { useVariableCatalog } from '../features/variableSearch/useVariableCatalog.js';
+import { EmptyState, ErrorState, LoadingState, NoImportState } from '../features/variableSearch/SearchStates.jsx';
 import VariableResults from '../features/variableSearch/VariableResults.jsx';
 import VariableDetails from '../features/variableSearch/VariableDetails.jsx';
 import './VariableSearch.css';
 
+// TODO(SCRUM-160): add the Component Type, Node Category, and Water Year Type filters.
 const defaultFilters = { runId: '', category: '', units: '', interval: '' };
 
 function VariableSearch({ onNavigate }) {
-  const [data] = useState(getVariableSearchData);
+  const { runs, activeRunId } = useContext(ActiveRunContext);
+  const activeRun = runs.find(run => run.id === activeRunId);
+  // SCRUM-146: sample data until an imported run carries its DSS file.
+  const catalog = useVariableCatalog(activeRun);
   const [keyword, setKeyword] = useState('');
   // Typing does not change the results until the form is submitted.
   const [submittedKeyword, setSubmittedKeyword] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
   const [selectedVariable, setSelectedVariable] = useState(null);
   const chartButtonRef = useRef(null);
-  const results = searchVariables(data.variables, submittedKeyword, filters);
-  const categories = [...new Set(data.variables.map(variable => variable.category))].sort();
-  const units = [...new Set(data.variables.map(variable => variable.units))].sort();
-  const intervals = [...new Set(data.variables.map(variable => variable.interval))].sort();
+  const keywordRef = useRef(null);
 
   useEffect(() => {
     if (!selectedVariable) chartButtonRef.current?.focus();
   }, [selectedVariable]);
+
+  // SCRUM-147 / SCRUM-158 / SCRUM-163: nothing to search until the data is ready.
+  if (catalog.status !== 'ready') {
+    const openImport = () => onNavigate('import-data');
+    return (
+      <main className="variable-search-page" aria-labelledby="variable-search-title">
+        <PageHeader id="variable-search-title" title="Variable and Location Search" />
+        <div className="variable-search-content">
+          {catalog.status === 'loading' && <LoadingState fileName={activeRun.file.name} />}
+          {catalog.status === 'error' && <ErrorState error={catalog.error} onRetry={catalog.retry} onReimport={openImport} />}
+          {catalog.status === 'no-import' && <NoImportState onImport={openImport} />}
+        </div>
+      </main>
+    );
+  }
+
+  const { data } = catalog;
+  const results = searchVariables(data.variables, submittedKeyword, filters);
+  // TODO(SCRUM-161): show paginate(results, page, pageSize).items and a pager under the table.
+  const categories = [...new Set(data.variables.map(variable => variable.category))].sort();
+  const units = [...new Set(data.variables.map(variable => variable.units))].sort();
+  const intervals = [...new Set(data.variables.map(variable => variable.interval))].sort();
 
   function openDetails(variable, button) {
     chartButtonRef.current = button;
@@ -32,6 +57,14 @@ function VariableSearch({ onNavigate }) {
 
   function updateFilter(name, value) {
     setFilters({ ...filters, [name]: value });
+  }
+
+  // SCRUM-148 / SCRUM-150: start over from the empty state.
+  function resetSearch() {
+    setKeyword('');
+    setSubmittedKeyword('');
+    setFilters(defaultFilters);
+    keywordRef.current.focus();
   }
 
   function handleSearch(event) {
@@ -55,6 +88,7 @@ function VariableSearch({ onNavigate }) {
             <div className="variable-search-input-row">
               <input
                 id="variable-keyword"
+                ref={keywordRef}
                 type="search"
                 placeholder="Search identifier or location, e.g. storage"
                 value={keyword}
@@ -98,7 +132,9 @@ function VariableSearch({ onNavigate }) {
             <h2 id="variable-results-title">Search results</h2>
             <p role="status">{results.length} matching {results.length === 1 ? 'variable' : 'variables'}</p>
           </div>
-          <VariableResults variables={results} onViewChart={openDetails} />
+          {results.length > 0
+            ? <VariableResults variables={results} onViewChart={openDetails} />
+            : <EmptyState onReset={resetSearch} />}
         </section>
 
         <div className="variable-search-actions">
