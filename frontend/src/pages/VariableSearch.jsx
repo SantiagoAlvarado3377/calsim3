@@ -8,8 +8,7 @@ import VariableResults from '../features/variableSearch/VariableResults.jsx';
 import VariableDetails from '../features/variableSearch/VariableDetails.jsx';
 import './VariableSearch.css';
 
-// TODO(SCRUM-160): add componentType and nodeCategory once loadDssVariables provides
-// them. Water Year Type classifies years, not variables, so it may filter chart dates instead.
+// TODO(SCRUM-160): add the Component Type, Node Category, and Water Year Type filters.
 const defaultFilters = { runId: '', category: '', units: '', interval: '' };
 
 function VariableSearch({ onNavigate }) {

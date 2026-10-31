@@ -19,7 +19,7 @@ export class VariableSearchError extends Error {
 
 // SCRUM-149: log the technical details quietly instead of showing them.
 export function logSearchError(error) {
-  // TODO(SCRUM-149): write to a local log file if the app moves to Electron/Tauri.
+  // TODO(SCRUM-149): also write these details to a local log file.
   console.error('[variable-search]', error.cause ?? error);
 }
 
@@ -33,9 +33,9 @@ export function logSearchError(error) {
  * @throws {VariableSearchError} kind 'dataUnavailable' when the file is missing, unreadable, or unsupported
  */
 export async function loadDssVariables(run) {
-  // TODO(SCRUM-159): parse run.file's DSS catalog. CalSim 3 record paths look like
-  // /A/B/C/D/E/F/: B is the variable identifier, C its type (for example STORAGE),
-  // E the interval (for example 1MON). Decide first whether parsing happens in the
-  // browser or in a local helper process.
+  // TODO(SCRUM-159): parse run.file's DSS catalog on the user's machine; the app
+  // runs locally with no server. CalSim 3 record paths look like /A/B/C/D/E/F/:
+  // B is the variable identifier, C its type (for example STORAGE), E the interval
+  // (for example 1MON).
   throw new VariableSearchError('dataUnavailable', new Error(`DSS parsing is not implemented yet (${run.file?.name ?? 'no file'})`));
 }
