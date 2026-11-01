@@ -159,6 +159,37 @@ describe('Variable Search with an imported DSS file', () => {
     expect(within(chart).getByText('300')).toBeTruthy();
   });
 
+  it('places chart points by date, leaving room for a missing month', async () => {
+    vi.mocked(readDssSeries).mockImplementation(async (file, { b }) => (b === 'WYT_SAC_' ? waterYearValues : [
+      { date: '1921-10-31', value: 100 }, { date: '1921-11-30', value: 200 }, { date: '1922-01-31', value: 150 },
+    ]));
+    openImportedRun();
+    await screen.findByText('62 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'View Chart for C_SAC000 in Run 1' }));
+    await screen.findByRole('img', { name: 'C_SAC000 in Run 1' });
+
+    // Nov 30 is 30 of the 92 days between the first and last point, not halfway.
+    const xs = document.querySelector('.variable-chart-line').getAttribute('points').split(' ').map(point => Number(point.split(',')[0]));
+    expect(xs[0]).toBe(72);
+    expect(xs[1]).toBeCloseTo(72 + (700 * 30) / 92);
+    expect(xs[2]).toBe(772);
+  });
+
+  it('closes the chart when the active run changes to another imported run', async () => {
+    const otherFile = new File(['other dss'], 'run2.dss');
+    vi.mocked(readDssCatalog).mockImplementation(async file => (file === otherFile ? [series('S_OTHER', 'STORAGE', 'TAF')] : catalog));
+    render(<App importedRuns={[{ id: 'run-1', name: 'Run 1', file: importedFile }, { id: 'run-2', name: 'Run 2', file: otherFile }]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
+    await screen.findByText('62 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'View Chart for C_SAC000 in Run 1' }));
+    expect(screen.getByRole('heading', { name: 'Variable details' })).toBeTruthy();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Active run:' }), { target: { value: 'run-2' } });
+    expect(await screen.findByText('1 matching variable')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Variable details' })).toBeNull();
+    expect(screen.getByRole('row', { name: /S_OTHER/ })).toBeTruthy();
+  });
+
   it('asks for a re-import when chart values cannot be read', async () => {
     vi.mocked(readDssSeries).mockImplementation(async (file, { b }) => {
       if (b === 'WYT_SAC_') return waterYearValues;

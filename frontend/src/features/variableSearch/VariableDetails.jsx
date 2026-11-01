@@ -42,7 +42,11 @@ function VariableChart({ variable, points, dateRange, waterYearType, waterYears 
   const top = niceBound(points.reduce((max, point) => Math.max(max, point.value), 0));
   const bottom = -niceBound(-points.reduce((min, point) => Math.min(min, point.value), 0));
   const span = top - bottom || 1;
-  const x = index => 72 + (points.length > 1 ? index / (points.length - 1) : 0.5) * 700;
+  // Place points by date, so missing values leave a gap instead of squeezing time together.
+  const times = points.map(point => Date.parse(point.date));
+  const firstTime = times[0];
+  const timeSpan = times.at(-1) - firstTime;
+  const x = index => 72 + (timeSpan > 0 ? (times[index] - firstTime) / timeSpan : 0.5) * 700;
   const y = value => 270 - ((value - bottom) / span) * 240;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map(fraction => bottom + fraction * span);
 
@@ -78,7 +82,7 @@ function VariableChart({ variable, points, dateRange, waterYearType, waterYears 
         ))}
         <text x="72" y="300" className="variable-chart-label">{formatMonth(variable.startMonth)}</text>
         <text x="422" y="300" textAnchor="middle" className="variable-chart-label">
-          {formatMonth(points[Math.floor(points.length / 2)].date.slice(0, 7))}
+          {formatMonth(new Date(firstTime + timeSpan / 2).toISOString().slice(0, 7))}
         </text>
         <text x="772" y="300" textAnchor="end" className="variable-chart-label">{formatMonth(variable.endMonth)}</text>
       </svg>

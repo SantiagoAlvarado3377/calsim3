@@ -51,6 +51,7 @@ const INFO_HEADER2_INTS = 16;
 const INFO_VALUES_ADDRESS = 19;
 const INFO_VALUES_INTS = 20;
 const INFO_NUMBER_STORED = 26;
+const READ_BATCH = 64; // series read at the same time while building the catalog
 const INFO_READ_WORDS = 128; // info block + pathname + (usually) the internal header right after it
 
 // 4-byte int positions in a time series' internal header (INT_HEAD_* in zStructAllocation.h).
@@ -106,8 +107,16 @@ export async function readDssCatalog(blob) {
       }
     }
 
-    // The reads don't depend on each other, so let them all run at once.
-    return Promise.all([...seriesByKey.values()].map(async ({ first, last }) => {
+    // The reads don't depend on each other, so run them in batches: fast, without
+    // asking the browser for thousands of file reads at once on a large file.
+    const groups = [...seriesByKey.values()];
+    const catalog = [];
+    for (let start = 0; start < groups.length; start += READ_BATCH) {
+      catalog.push(...await Promise.all(groups.slice(start, start + READ_BATCH).map(readSeriesEntry)));
+    }
+    return catalog;
+
+    async function readSeriesEntry({ first, last }) {
       const record = await readRecord(blob, first);
       const lastInfo = last === first ? record.info : (await readRecord(blob, last)).info;
       return {
@@ -121,7 +130,7 @@ export async function readDssCatalog(blob) {
         startMonth: infoDate(record.info, INFO_FIRST_VALUE).slice(0, 7),
         endMonth: infoDate(lastInfo, INFO_LAST_VALUE).slice(0, 7),
       };
-    }));
+    }
   });
 }
 

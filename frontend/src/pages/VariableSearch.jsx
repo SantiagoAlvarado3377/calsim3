@@ -85,6 +85,8 @@ function VariableSearch({ onNavigate }) {
   }
 
   const { data } = catalog;
+  // Switching the active run loads new variables; details for the old run's variable close.
+  const shownVariable = selectedVariable && data.variables.includes(selectedVariable) ? selectedVariable : null;
   const hasWaterYears = Object.keys(data.waterYearTypes).length > 0;
   let results = [];
   let searchError = null;
@@ -139,18 +141,18 @@ function VariableSearch({ onNavigate }) {
     <main className="variable-search-page" aria-labelledby="variable-search-title">
       <PageHeader id="variable-search-title" title="Variable and Location Search" />
 
-      {selectedVariable && (
+      {shownVariable && (
         <VariableDetails
-          variable={selectedVariable}
+          variable={shownVariable}
           file={activeRun?.file}
           waterYearType={waterYearType}
-          waterYears={yearsById.get(selectedVariable.id)}
+          waterYears={yearsById.get(shownVariable.id)}
           onBack={() => setSelectedVariable(null)}
         />
       )}
 
       {/* Keep the search mounted so returning also preserves the controls and row focus. */}
-      <div className="variable-search-content" hidden={Boolean(selectedVariable)}>
+      <div className="variable-search-content" hidden={Boolean(shownVariable)}>
         <p className="variable-search-subtitle">
           Find CalSim 3 variables by identifier or mapped location.
           {catalog.sample && ' Showing sample data; import a DSS file to search a real run.'}

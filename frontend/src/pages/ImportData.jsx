@@ -1,6 +1,6 @@
 // Import Data page (SCRUM-114).
 // Lets the user choose a completed CalSim 3 run's HEC-DSS (.dss) file, name the
-// run, and (in prototype mode) "import" it.
+// run, and import it for this session (Variable Search reads the file locally).
 //
 // How the pieces fit:
 //   ImportData (this file)  -> owns the form state: chosen file, error, run name, description
@@ -118,8 +118,11 @@ function ImportData({ onImport }) {
       file: selectedFile,
     });
     setStatusMessage(
-      `Prototype mode: "${fields.runName.trim()}" from ${selectedFile.name} is ready to import.`,
+      `"${fields.runName.trim()}" was imported from ${selectedFile.name} and is now the active run.`,
     );
+    // Clear the form so the same run isn't added twice.
+    setSelectedFile(null);
+    setFields(emptyFields);
   }
  
   function handleCancel() {
@@ -182,7 +185,7 @@ function ImportData({ onImport }) {
           </p>
  
           <p className="import-data-prototype-note">
-            Prototype mode: importing demonstrates the workflow using sample simulation results.
+            Imported runs are kept for this session. The DSS file is read on this computer; nothing is uploaded.
           </p>
  
           {/* role="status" = polite live region: screen readers read the
