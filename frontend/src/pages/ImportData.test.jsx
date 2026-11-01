@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../App.jsx';
 import { formatFileSize, validateDssFile } from '../features/importData/validateDssFile.js';
+import { fileNameToRunName, RUN_NAME_MAX_LENGTH } from '../features/importData/fileNameToRunName.js';
  
 afterEach(() => {
   cleanup();
@@ -64,6 +65,11 @@ function browseFor(file) {
   fireEvent.change(fileInput(), { target: { files: [file] } });
 }
  
+// Current text in the Run name box.
+function runNameValue() {
+  return page().getByRole('textbox', { name: 'Run name' }).value;
+}
+ 
 function typeRunName(value) {
   fireEvent.change(page().getByRole('textbox', { name: 'Run name' }), { target: { value } });
 }
@@ -85,23 +91,22 @@ describe('Import Data page', () => {
     expect(dropZone().dataset.state).toBe('idle');
   });
  
-
-// Run name + Description fields (SCRUM-121)
-
-it('shows labelled, empty Run name and Description fields that update as the user types', () => {
+  // ---------- Run name + Description fields (SCRUM-121) ----------
+ 
+  it('shows labelled, empty Run name and Description fields that update as the user types', () => {
     openImportData();
     // getByRole('textbox', { name }) only works if the <label> is correctly
     // tied to its input, so finding them this way also proves the labels work
     // (clicking a tied label focuses its input in a real browser).
     const runName = page().getByRole('textbox', { name: 'Run name' });
     const description = page().getByRole('textbox', { name: 'Description' });
-
+ 
     // The Figma text is placeholder (grey hint), not a pre-filled value.
     expect(runName.value).toBe('');
     expect(runName.placeholder).toBe('Baseline 2025');
     expect(description.value).toBe('');
     expect(description.placeholder).toBe('Reference simulation run');
-
+ 
     // Controlled inputs: React state drives the value, so after a change event
     // the DOM value reflects what was typed.
     fireEvent.change(runName, { target: { value: 'Alternative A' } });
@@ -109,9 +114,7 @@ it('shows labelled, empty Run name and Description fields that update as the use
     expect(runName.value).toBe('Alternative A');
     expect(description.value).toBe('Higher Delta outflow');
   });
-
-
-
+ 
   // ---------- Browse Files (SCRUM-117) ----------
  
   it('Browse Files opens the native file dialog filtered to .dss', () => {
@@ -138,8 +141,11 @@ it('shows labelled, empty Run name and Description fields that update as the use
     // Browse relabels once a file is chosen, and Remove appears.
     expect(page().getByRole('button', { name: 'Choose a Different File' })).toBeTruthy();
     expect(page().getByRole('button', { name: 'Remove' })).toBeTruthy();
-    // Still disabled: the run name is empty.
-    expect(importButton().disabled).toBe(true);
+    // SCRUM-122: the run name auto-fills from the file name, so with a valid
+    // file AND a name, Import is now enabled. (Before SCRUM-122 this test
+    // expected "disabled" because the name stayed empty.)
+    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('baseline 2025');
+    expect(importButton().disabled).toBe(false);
   });
  
   // ---------- validation (SCRUM-118) ----------
@@ -278,6 +284,72 @@ it('shows labelled, empty Run name and Description fields that update as the use
     expect(dropZone().dataset.state).toBe('idle');
   });
  
+  // ---------- auto-fill run name from the file name (SCRUM-122) ----------
+ 
+  it('auto-fills Run name from a browsed .dss file name (Figma example)', () => {
+    openImportData();
+    browseFor(makeFile('DCR2023_DV_9.3.1_v2a_Danube_Adj_v1.8.dss'));
+    expect(runNameValue()).toBe('DCR2023 DV 9.3.1 v2a Danube Adj v1.8');
+  });
+ 
+  it('auto-fills Run name from a dropped .dss file too', () => {
+    openImportData();
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('alternative_a.dss')]) });
+    expect(runNameValue()).toBe('alternative a');
+  });
+ 
+  it('keeps a name the user typed when a file is selected afterwards', () => {
+    openImportData();
+    typeRunName('My Baseline');
+    browseFor(makeFile('baseline_2025.dss'));
+    expect(runNameValue()).toBe('My Baseline');
+  });
+ 
+  it('replaces an auto-filled name when a different file is selected (no typing in between)', () => {
+    openImportData();
+    browseFor(makeFile('file_a.dss'));
+    expect(runNameValue()).toBe('file a');
+ 
+    browseFor(makeFile('file_b.dss'));
+    expect(runNameValue()).toBe('file b');
+  });
+ 
+  it('auto-fills again after the user clears Run name completely', () => {
+    openImportData();
+    typeRunName('Typed name');
+    typeRunName(''); // cleared: the "user edited" flag turns off
+    browseFor(makeFile('baseline_2025.dss'));
+    expect(runNameValue()).toBe('baseline 2025');
+  });
+ 
+  it('an invalid file never changes Run name (empty or auto-filled)', () => {
+    openImportData();
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('not-a-dss.txt')]) });
+    expect(runNameValue()).toBe(''); // stays empty
+ 
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('not-a-dss.txt')]) });
+    expect(runNameValue()).toBe('baseline 2025'); // keeps the earlier auto-fill
+  });
+ 
+  it('cuts a very long auto-filled name to the maximum length', () => {
+    openImportData();
+    browseFor(makeFile(`${'a'.repeat(150)}.dss`));
+    expect(runNameValue().length).toBe(RUN_NAME_MAX_LENGTH);
+  });
+ 
+  it('Remove clears an auto-filled name but keeps a typed one', () => {
+    openImportData();
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.click(page().getByRole('button', { name: 'Remove' }));
+    expect(runNameValue()).toBe(''); // came from the file, so it goes with it
+ 
+    typeRunName('Typed name');
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.click(page().getByRole('button', { name: 'Remove' }));
+    expect(runNameValue()).toBe('Typed name'); // the user's own name stays
+  });
+ 
   it('Import shows the prototype confirmation with the run and file names', () => {
     openImportData();
     browseFor(makeFile('baseline.dss'));
@@ -332,5 +404,30 @@ describe('formatFileSize', () => {
     [5 * 1024 * 1024, '5.0 MB'],
   ])('formats %i bytes as %s', (bytes, expected) => {
     expect(formatFileSize(bytes)).toBe(expected);
+  });
+});
+ 
+describe('fileNameToRunName (SCRUM-122)', () => {
+  // it.each runs the same test once per row: [input file name, expected run name].
+  it.each([
+    // the Figma example: only the LAST extension goes, version dots stay
+    ['DCR2023_DV_9.3.1_v2a_Danube_Adj_v1.8.dss', 'DCR2023 DV 9.3.1 v2a Danube Adj v1.8'],
+    ['baseline_2025.dss', 'baseline 2025'], // underscores -> spaces
+    ['BASELINE.DSS', 'BASELINE'], // uppercase extension is removed too
+    ['run.v2.dss', 'run.v2'], // multiple dots: only the last one is an extension
+    ['alt__ops___a.dss', 'alt ops a'], // repeated underscores collapse to one space
+    ['_ padded _ name _.dss', 'padded name'], // mixed underscores/spaces collapse; ends trimmed
+  ])('turns %s into "%s"', (fileName, expected) => {
+    expect(fileNameToRunName(fileName)).toBe(expected);
+  });
+ 
+  it(`never returns more than ${RUN_NAME_MAX_LENGTH} characters`, () => {
+    expect(fileNameToRunName(`${'x'.repeat(250)}.dss`)).toBe('x'.repeat(RUN_NAME_MAX_LENGTH));
+  });
+ 
+  it('does not leave a trailing space when the cut lands on a space', () => {
+    // 99 letters, then an underscore at position 100 (becomes a space), then more
+    const name = `${'x'.repeat(99)}_yyy.dss`;
+    expect(fileNameToRunName(name)).toBe('x'.repeat(99));
   });
 });

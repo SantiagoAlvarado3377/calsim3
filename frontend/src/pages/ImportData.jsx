@@ -6,6 +6,7 @@
 //   ImportData (this file)  -> owns the form state: chosen file, error, run name, description
 //   DssDropZone             -> UI for picking a file (drag-and-drop + Browse)
 //   validateDssFile         -> the rule for what counts as a valid file
+//   fileNameToRunName       -> suggests a run name from the file name (SCRUM-122)
 //
 // App.jsx also passes an onNavigate prop. This page doesn't use it yet, so it
 // isn't destructured (that keeps ESLint's no-unused-vars quiet). Add it back
@@ -15,6 +16,7 @@ import { useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import DssDropZone from '../features/importData/DssDropZone.jsx';
 import { validateDssFile } from '../features/importData/validateDssFile.js';
+import { fileNameToRunName } from '../features/importData/fileNameToRunName.js';
 import './ImportData.css'; // page-specific styles, same pattern as the other pages
  
 // Starting values for the text fields. Kept in one object so Cancel can reset
@@ -37,6 +39,12 @@ function ImportData() {
   // Message for the drop zone's error state ('' = no error).
   const [fileError, setFileError] = useState('');
   const [fields, setFields] = useState(emptyFields);
+  // SCRUM-122: has the user typed their own run name?
+  //   false -> choosing a file may fill in (or replace) the run name
+  //   true  -> leave the run name alone; it's the user's choice
+  // Analogy: a "reserved" sign on a seat. Once the user sits down (types), the
+  // auto-fill won't take the seat. Clearing the field takes the sign away.
+  const [runNameEdited, setRunNameEdited] = useState(false);
   // Feedback shown after clicking Import Data ('' = nothing to show).
   const [statusMessage, setStatusMessage] = useState('');
  
@@ -81,12 +89,27 @@ function ImportData() {
     // shows its name and the Import button can enable.
     setSelectedFile(files[0]);
     setFileError('');
+ 
+    // SCRUM-122: suggest a run name from the file name, unless the user has
+    // typed their own. This runs ONLY for valid files: the invalid and
+    // multi-file cases above `return` early, so they never touch the name.
+    // Because it runs on every valid pick, choosing file A then file B (without
+    // typing) shows B's name.
+    if (!runNameEdited) {
+      setFields(current => ({ ...current, runName: fileNameToRunName(files[0].name) }));
+    }
   }
  
   function clearFile() {
     setSelectedFile(null);
     setFileError('');
     setStatusMessage('');
+    // If the run name only came from the file (the user never typed one),
+    // it belongs to that file, so Remove takes it away too. A name the user
+    // typed is kept. (Not in the ticket; a team-agreed default.)
+    if (!runNameEdited) {
+      setFields(current => ({ ...current, runName: '' }));
+    }
   }
  
   // One handler for both inputs: the input's `name` attribute says which key
@@ -95,6 +118,14 @@ function ImportData() {
     const { name, value } = event.target;
     setFields(current => ({ ...current, [name]: value }));
     setStatusMessage('');
+ 
+    // SCRUM-122: typing in Run name marks it as the user's own...
+    // ...unless they cleared it completely, which hands control back to
+    // auto-fill so the next file can fill it in again.
+    // (Only an EMPTY field counts as cleared; "   " is still user input.)
+    if (name === 'runName') {
+      setRunNameEdited(value !== '');
+    }
   }
  
   // SCRUM-119: the form is valid only with BOTH a valid file AND a run name.
@@ -194,3 +225,4 @@ function ImportData() {
 }
  
 export default ImportData;
+ 
