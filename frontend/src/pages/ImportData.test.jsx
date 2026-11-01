@@ -85,6 +85,33 @@ describe('Import Data page', () => {
     expect(dropZone().dataset.state).toBe('idle');
   });
  
+
+// Run name + Description fields (SCRUM-121)
+
+it('shows labelled, empty Run name and Description fields that update as the user types', () => {
+    openImportData();
+    // getByRole('textbox', { name }) only works if the <label> is correctly
+    // tied to its input, so finding them this way also proves the labels work
+    // (clicking a tied label focuses its input in a real browser).
+    const runName = page().getByRole('textbox', { name: 'Run name' });
+    const description = page().getByRole('textbox', { name: 'Description' });
+
+    // The Figma text is placeholder (grey hint), not a pre-filled value.
+    expect(runName.value).toBe('');
+    expect(runName.placeholder).toBe('Baseline 2025');
+    expect(description.value).toBe('');
+    expect(description.placeholder).toBe('Reference simulation run');
+
+    // Controlled inputs: React state drives the value, so after a change event
+    // the DOM value reflects what was typed.
+    fireEvent.change(runName, { target: { value: 'Alternative A' } });
+    fireEvent.change(description, { target: { value: 'Higher Delta outflow' } });
+    expect(runName.value).toBe('Alternative A');
+    expect(description.value).toBe('Higher Delta outflow');
+  });
+
+
+
   // ---------- Browse Files (SCRUM-117) ----------
  
   it('Browse Files opens the native file dialog filtered to .dss', () => {
