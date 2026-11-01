@@ -30,7 +30,7 @@ function InfoIcon() {
   );
 }
  
-function ImportData() {
+function ImportData({ onImport }) {
   // The File object the user chose (or null). Holding the whole File (not just
   // its name) means a later story can actually read or upload the contents.
   const [selectedFile, setSelectedFile] = useState(null);
@@ -107,8 +107,16 @@ function ImportData() {
     event.preventDefault(); // stop the browser's default full-page form submit
     if (!isFormValid) return; // belt and braces; the button is disabled anyway
  
-    // Prototype mode: actually reading and storing the run is a later story.
-    // For now, confirm what WOULD be imported so the workflow can be demoed.
+    // SCRUM-163: hand the run and its File to the app for this session so
+    // Variable Search can read it. Saving runs between sessions is SCRUM-125.
+    onImport?.({
+      id: `run-${Date.now()}`,
+      name: fields.runName.trim(),
+      description: fields.description.trim(),
+      source: selectedFile.name,
+      importedAt: new Date().toISOString(),
+      file: selectedFile,
+    });
     setStatusMessage(
       `Prototype mode: "${fields.runName.trim()}" from ${selectedFile.name} is ready to import.`,
     );
