@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import './SimulationRuns.css';
 
@@ -9,12 +10,50 @@ const sampleRuns = [
 ];
 
 function SimulationRuns({ runs = sampleRuns }) {
+  const [search, setSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const searchText = search.trim().toLowerCase();
+
+  const displayedRuns = runs
+    .filter(run => run.name.toLowerCase().includes(searchText))
+    .sort((a, b) => {
+      const comparison = a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
   return (
     <main className="simulation-runs" aria-labelledby="simulation-runs-title">
       <PageHeader id="simulation-runs-title" title="Simulation Runs" />
       <div className="simulation-runs-content">
         <p className="simulation-runs-subtitle">Saved runs remain separate and linked to their source files</p>
         <p className="simulation-runs-note">Sample data for prototype</p>
+
+        <div className="simulation-runs-controls">
+          <div className="simulation-runs-search">
+            <label htmlFor="run-search">Search runs</label>
+            <input
+              id="run-search"
+              type="search"
+              placeholder="Search runs by name"
+              value={search}
+              onChange={event => setSearch(event.target.value)}
+            />
+          </div>
+
+          <div className="simulation-runs-sort">
+            <label htmlFor="run-sort">Sort by</label>
+            <select
+              id="run-sort"
+              value={sortOrder}
+              onChange={event => setSortOrder(event.target.value)}
+            >
+              <option value="asc">Name: A–Z</option>
+              <option value="desc">Name: Z–A</option>
+            </select>
+          </div>
+        </div>
+
         <div className="simulation-runs-table-wrap" role="region" aria-label="Saved simulation runs" tabIndex={0}>
           <table className="simulation-runs-table">
             <caption>Saved simulation runs</caption>
@@ -29,7 +68,7 @@ function SimulationRuns({ runs = sampleRuns }) {
               </tr>
             </thead>
             <tbody>
-              {runs.map(run => (
+              {displayedRuns.map(run => (
                 <tr key={run.id}>
                   <th scope="row">{run.name}</th>
                   <td>{run.source}</td>
@@ -39,8 +78,16 @@ function SimulationRuns({ runs = sampleRuns }) {
                   <td>{run.status}</td>
                 </tr>
               ))}
-              {runs.length === 0 && (
-                <tr><td colSpan={6}>No saved simulation runs yet.</td></tr>
+              {displayedRuns.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <span role="status">
+                      {searchText
+                        ? 'No matching runs found.'
+                        : 'No saved simulation runs yet.'}
+                    </span>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
