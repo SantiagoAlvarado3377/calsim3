@@ -467,7 +467,27 @@ describe('Import Data page', () => {
     expect(importButton().disabled).toBe(true);
   });
 
+  it('after an import, shows no field error and auto-fills from the next file', () => {
+    openImportData();
+    browseFor(makeFile('a.dss'));
+    typeRunName('Scenario 2026');
+    fireEvent.click(importButton());
+    expect(runNameError()).toBe('');
 
+    browseFor(makeFile('second_file.dss'));
+    expect(runNameValue()).toBe('second file');
+  });
+
+  it('a run imported this session counts as an existing name', () => {
+    openImportData();
+    browseFor(makeFile('scenario_2026.dss'));
+    fireEvent.click(importButton());
+
+    browseFor(makeFile('scenario_2026.dss'));
+    expect(runNameError()).toBe('A run named "scenario 2026" already exists. Choose a different name.');
+    expect(importButton().disabled).toBe(true);
+  });
+ 
   // ---------- Cancel (SCRUM-123) ----------
  
   it('Cancel puts everything back to its starting state (ticket scenario)', () => {

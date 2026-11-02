@@ -263,13 +263,13 @@ describe('Variable Search with an imported DSS file', () => {
     const form = screen.getByRole('form', { name: 'Import simulation run' });
     const chosen = new File(['dss bytes'], 'baseline.dss');
     fireEvent.change(within(form).getByLabelText('Choose HEC-DSS file'), { target: { files: [chosen] } });
-    fireEvent.change(within(form).getByLabelText('Run name'), { target: { value: 'Baseline 2025' } });
+    fireEvent.change(within(form).getByLabelText('Run name'), { target: { value: 'Scenario 2026' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Import Data' }));
 
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Main navigation' })).getByRole('button', { name: 'Variable Search' }));
     expect(await screen.findByText('62 matching variables')).toBeTruthy();
     expect(readDssCatalog).toHaveBeenCalledWith(chosen);
     expect(screen.getByRole('combobox', { name: 'Active run:' }).value).toMatch(/^run-/);
-    expect(within(screen.getByRole('combobox', { name: 'Run' })).getByText('Baseline 2025')).toBeTruthy();
+    expect(within(screen.getByRole('combobox', { name: 'Run' })).getByText('Scenario 2026')).toBeTruthy();
   });
 });

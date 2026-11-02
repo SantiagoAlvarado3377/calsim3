@@ -199,12 +199,13 @@ function ImportData({ onImport, existingRunNames = mockRunNames }) {
       importedAt: new Date().toISOString(),
       file: selectedFile,
     });
+    // Clear the form the same way Cancel does (so the same run isn't added
+    // twice, no "Run name is required." shows, and the next file auto-fills),
+    // then confirm. The status set after handleCancel wins.
+    handleCancel();
     setStatusMessage(
       `"${fields.runName.trim()}" was imported from ${selectedFile.name} and is now the active run.`,
     );
-    // Clear the form so the same run isn't added twice.
-    setSelectedFile(null);
-    setFields(emptyFields);
   }
  
   // SCRUM-123: Cancel = "start over". Put EVERY piece of form state back to its
