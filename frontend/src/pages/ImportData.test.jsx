@@ -251,15 +251,17 @@ describe('Import Data page', () => {
     expect(dropZone().dataset.state).toBe('idle');
   });
  
-  it('Import shows the prototype confirmation with the run and file names', () => {
+  it('Import confirms the run and file names, then clears the form', () => {
     openImportData();
     browseFor(makeFile('baseline.dss'));
     typeRunName('  Baseline 2025  ');
     fireEvent.click(importButton());
  
     expect(screen.getByRole('status').textContent).toBe(
-      'Prototype mode: "Baseline 2025" from baseline.dss is ready to import.',
+      '"Baseline 2025" was imported from baseline.dss and is now the active run.',
     );
+    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('');
+    expect(importButton().disabled).toBe(true);
   });
  
   it('Cancel resets the file, fields, error and status', () => {

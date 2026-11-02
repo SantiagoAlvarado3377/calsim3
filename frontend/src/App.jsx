@@ -57,7 +57,7 @@ function Sidebar({ currentPage, onNavigate }) {
     );
 }
 
-function PageContent({ currentPage, onNavigate, importedRuns, recentActivity }) {
+function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, onImport }) {
     if (currentPage === 'dashboard') {
         return (
             <Dashboard
@@ -71,29 +71,43 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity }) 
     if (currentPage === 'data-explorer') return <DataExplorer />;
     if (currentPage === 'compare-runs') return <CompareRuns />;
     if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
-    if (currentPage === 'import-data') return <ImportData onNavigate={onNavigate} />;
+    if (currentPage === 'import-data') return <ImportData onNavigate={onNavigate} onImport={onImport} />;
 
     return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
 }
 
 function App({ importedRuns = [], recentActivity = [] }) {
     const [currentPage, setCurrentPage] = useState('dashboard');
+    // Runs imported during this session, each with the File the user chose
+    // (SCRUM-163). Saving them between sessions belongs to SCRUM-125.
+    const [runs, setRuns] = useState(importedRuns);
     // Keep the selection above the pages so navigation doesn't reset it.
-    // Imported-run storage can supply importedRuns when it is connected.
     const [selectedRunId, setSelectedRunId] = useState('');
-    const activeRunId = importedRuns.some(run => run.id === selectedRunId)
+    const activeRunId = runs.some(run => run.id === selectedRunId)
         ? selectedRunId
-        : importedRuns[0]?.id ?? '';
+        : runs[0]?.id ?? '';
+
+    // A newly imported run becomes the active run.
+    function addRun(run) {
+        setRuns(current => [...current, run]);
+        setSelectedRunId(run.id);
+    }
+
+    // SCRUM-150: Re-import File swaps in a new file for the same run.
+    function replaceRunFile(runId, file) {
+        setRuns(current => current.map(run => (run.id === runId ? { ...run, file, source: file.name } : run)));
+    }
 
     return (
-        <ActiveRunContext.Provider value={{ runs: importedRuns, activeRunId, onActiveRunChange: setSelectedRunId }}>
+        <ActiveRunContext.Provider value={{ runs, activeRunId, onActiveRunChange: setSelectedRunId, onRunFileChange: replaceRunFile }}>
             <div className={`app-layout app-layout--${currentPage}`}>
                 <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
                 <PageContent
                     currentPage={currentPage}
                     onNavigate={setCurrentPage}
-                    importedRuns={importedRuns}
+                    importedRuns={runs}
                     recentActivity={recentActivity}
+                    onImport={addRun}
                 />
             </div>
         </ActiveRunContext.Provider>

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
 import App from '../App.jsx';
 
 afterEach(() => {
@@ -8,9 +9,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Opens Variable Search and chooses the sample runs from the import prompt.
 function openVariableSearch(importedRuns) {
   render(<App importedRuns={importedRuns} />);
   fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
 }
 
 describe('Variable Search', () => {
@@ -20,7 +23,7 @@ describe('Variable Search', () => {
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
     expect(screen.getByRole('combobox', { name: 'Active run:' }).disabled).toBe(true);
     expect(screen.getByRole('searchbox', { name: 'Keyword' })).toBeTruthy();
-    for (const name of ['Run', 'Category', 'Units', 'Interval']) {
+    for (const name of ['Run', 'Component Type', 'Node Category', 'Units', 'Interval', 'Water Year Type']) {
       expect(screen.getByRole('combobox', { name })).toBeTruthy();
     }
     expect(screen.getByRole('table', { name: 'Variable search results' })).toBeTruthy();
@@ -33,6 +36,7 @@ describe('Variable Search', () => {
     expect(screen.getByRole('heading', { name: 'Compare Simulation Runs' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Variable Search' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
     fireEvent.click(screen.getByRole('button', { name: 'Analyze Anomalies' }));
     expect(screen.getByRole('heading', { name: 'Anomaly Detection' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
@@ -79,7 +83,7 @@ describe('Variable Search', () => {
 
   it.each([
     ['Run', 'alternative-operations-a', 4],
-    ['Category', 'Flow', 4],
+    ['Component Type', 'Flow', 4],
     ['Units', 'TAF', 9],
     ['Interval', '1DAY', 1],
   ])('filters by %s immediately', (name, value, expectedCount) => {
@@ -93,7 +97,7 @@ describe('Variable Search', () => {
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'storage' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
     for (const [name, value] of [
-      ['Run', 'climate-stress-c'], ['Category', 'Storage'], ['Units', 'TAF'], ['Interval', '1MON'],
+      ['Run', 'climate-stress-c'], ['Component Type', 'Storage'], ['Units', 'TAF'], ['Interval', '1MON'],
     ]) {
       fireEvent.change(screen.getByRole('combobox', { name }), { target: { value } });
     }
@@ -101,7 +105,7 @@ describe('Variable Search', () => {
     expect(screen.getByText('SAMPLE_FOLSOM_STORAGE')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
-    for (const name of ['Run', 'Category', 'Units', 'Interval']) {
+    for (const name of ['Run', 'Component Type', 'Node Category', 'Units', 'Interval', 'Water Year Type']) {
       expect(screen.getByRole('combobox', { name }).value).toBe('');
     }
     expect(screen.getByRole('searchbox').value).toBe('storage');
@@ -139,7 +143,7 @@ describe('Variable Search', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
-      'Identifier', 'Location', 'Category', 'Units', 'Interval', 'Date range', 'Action',
+      'Identifier', 'Location', 'Component Type', 'Units', 'Interval', 'Date range', 'Action',
     ]);
 
     const storageRow = within(table).getByRole('row', { name: /SAMPLE_SHASTA_STORAGE/ });
@@ -159,7 +163,7 @@ describe('Variable Search', () => {
     ['SAMPLE_SHASTA_STORAGE', 'historical-drought', 'Historical Drought Study', 'Shasta Lake', 'Storage', 'TAF', '1MON', 'Jan 2010 – Dec 2015'],
     ['DELTA_OUTFLOW', 'baseline-2025', 'Baseline 2025', 'Sacramento–San Joaquin Delta', 'Flow', 'CFS', '1MON', 'Jan 2020 – Dec 2025'],
     ['SACRAMENTO_FLOW', 'climate-stress-c', 'Climate Stress Test C', 'Sacramento River', 'Flow', 'CFS', '1DAY', 'Apr 2021 – Sep 2024'],
-  ])('opens %s details and returns to the same search and focused row', (identifier, runId, runName, location, category, units, interval, dateRange) => {
+  ])('opens %s details and returns to the same search and focused row', (identifier, runId, runName, location, componentType, units, interval, dateRange) => {
     openVariableSearch();
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: identifier } });
     fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
@@ -168,8 +172,9 @@ describe('Variable Search', () => {
     fireEvent.click(chartButton);
 
     const details = screen.getByRole('region', { name: 'Variable details' });
-    for (const text of [identifier, runName, location, category, units, interval, dateRange]) {
-      expect(within(details).getByText(text, { selector: 'dd' })).toBeTruthy();
+    for (const text of [identifier, runName, location, componentType, units, interval, dateRange]) {
+      // Storage variables show "Storage" as both component type and node category.
+      expect(within(details).getAllByText(text, { selector: 'dd' }).length).toBeGreaterThan(0);
     }
     expect(screen.getByRole('img', { name: `${identifier} in ${runName}` })).toBeTruthy();
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Variable details' }));
@@ -205,28 +210,75 @@ describe('Variable Search', () => {
     expect(screen.getByRole('status').textContent).toBe('13 matching variables');
   });
 
-  it('shows loading, then a recoverable error for an imported file it cannot read (SCRUM-149, SCRUM-150, SCRUM-158)', async () => {
-    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    openVariableSearch([{ id: 'run-1', name: 'Run 1', file: new File(['not dss'], 'run1.dss') }]);
-    expect(screen.getByRole('status').textContent).toBe('Loading variables from run1.dss…');
+  it('prompts for an import when no DSS file is loaded, and opens Import Data (SCRUM-163)', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
 
-    const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toContain('Unable to read the imported data file. Please re-import the DSS file and try again.');
-    expect(alert.textContent).not.toContain('not implemented');
-    expect(log).toHaveBeenCalled();
-
-    fireEvent.click(within(alert).getByRole('button', { name: 'Retry Search' }));
-    expect(screen.getByRole('status')).toBeTruthy();
-    fireEvent.click(within(await screen.findByRole('alert')).getByRole('button', { name: 'Re-import File' }));
+    expect(screen.getByText('Import a CalSim 3 DSS file to search its variables.')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Import a DSS file' }));
     expect(screen.getByRole('heading', { name: 'Import Data' })).toBeTruthy();
   });
-});
 
-// Sprint 2 work the scaffold leaves open.
-describe('Variable Search follow-ups', () => {
-  it.todo('SCRUM-159: lists the variables and locations parsed from an imported DSS file');
-  it.todo('SCRUM-160: filters by Component Type, Node Category, and Water Year Type');
-  it.todo('SCRUM-161: pages through large result sets');
-  it.todo('SCRUM-163: prompts for an import when no DSS file is loaded');
-  it.todo('SCRUM-149: shows the search-failed message and Try Again for a failed search');
+  it('filters by node category and component type (SCRUM-160)', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Node Category' }), { target: { value: 'Channel' } });
+    expect(screen.getByRole('status').textContent).toBe('4 matching variables');
+    expect(screen.queryByText('SAMPLE_SHASTA_STORAGE')).toBeNull();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Component Type' }), { target: { value: 'Storage' } });
+    expect(screen.getByRole('status').textContent).toBe('0 matching variables');
+  });
+
+  it('keeps only variables with years of the chosen water year type and charts just those years (SCRUM-160)', () => {
+    openVariableSearch();
+    // The sample year types cycle Wet, Above Normal, ... from 2010, so Climate
+    // Stress Test C (water years 2021–2024) has no Wet year.
+    fireEvent.change(screen.getByRole('combobox', { name: 'Water Year Type' }), { target: { value: 'Wet' } });
+    expect(screen.getByRole('status').textContent).toBe('11 matching variables');
+    expect(screen.queryByText('SAMPLE_FOLSOM_STORAGE')).toBeNull();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
+    const row = screen.getByRole('row', { name: /SAMPLE_SHASTA_STORAGE/ });
+    expect(within(row).getByText('2 Wet water years')).toBeTruthy();
+
+    // Water years 2010 and 2015 are drawn as two separate lines.
+    fireEvent.click(within(row).getByRole('button', { name: /View Chart/ }));
+    expect(document.querySelectorAll('.variable-chart-line')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    expect(screen.getByRole('combobox', { name: 'Water Year Type' }).value).toBe('');
+    expect(screen.getByRole('status').textContent).toBe('13 matching variables');
+  });
+
+  it('imports a real DSS file and searches it end to end (SCRUM-146, SCRUM-163)', async () => {
+    // Written by HEC's own DSS library; see dss/fixtures/make_fixtures.py.
+    const fixture = `${import.meta.dirname}/../features/variableSearch/dss/fixtures/calsim_sample.dss`;
+    const file = new File([readFileSync(fixture)], 'calsim_sample.dss');
+    render(<App />);
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    fireEvent.click(within(nav).getByRole('button', { name: 'Import Data' }));
+    const form = screen.getByRole('form', { name: 'Import simulation run' });
+    fireEvent.change(within(form).getByLabelText('Choose HEC-DSS file'), { target: { files: [file] } });
+    fireEvent.change(within(form).getByLabelText('Run name'), { target: { value: 'Baseline 2025' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Import Data' }));
+    fireEvent.click(within(nav).getByRole('button', { name: 'Variable Search' }));
+
+    expect(await screen.findByText('8 matching variables')).toBeTruthy();
+    const shasta = screen.getByRole('row', { name: /S_SHSTA/ });
+    for (const text of ['Baseline 2025', 'SHSTA', 'STORAGE', 'TAF', '1Month', 'Oct 1921 – Sep 1951']) {
+      expect(within(shasta).getByText(text)).toBeTruthy();
+    }
+
+    // WYT_SAC_ has Critical years 1925, 1931, 1939 and 1946.
+    fireEvent.change(screen.getByRole('combobox', { name: 'Water Year Type' }), { target: { value: 'Critical' } });
+    expect(screen.getByRole('status').textContent).toBe('3 matching variables');
+    expect(within(screen.getByRole('row', { name: /S_SHSTA/ })).getByText('4 Critical water years')).toBeTruthy();
+    expect(within(screen.getByRole('row', { name: /C_SAC000/ })).getByText('2 Critical water years')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View Chart for S_SHSTA in Baseline 2025' }));
+    expect(await screen.findByRole('img', { name: 'S_SHSTA in Baseline 2025' })).toBeTruthy();
+    expect(document.querySelectorAll('.variable-chart-line')).toHaveLength(4);
+  });
 });

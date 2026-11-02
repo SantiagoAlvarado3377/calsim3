@@ -5,4 +5,5 @@ export const ActiveRunContext = createContext({
   runs: [],
   activeRunId: '',
   onActiveRunChange: null,
+  onRunFileChange: null,
 });

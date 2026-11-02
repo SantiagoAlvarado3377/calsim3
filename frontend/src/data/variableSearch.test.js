@@ -7,7 +7,7 @@ describe('Variable Search mock data', () => {
     expect(new Set(variables.map(variable => variable.id)).size).toBe(variables.length);
 
     for (const variable of variables) {
-      for (const field of ['identifier', 'location', 'category', 'units', 'interval', 'startMonth', 'endMonth', 'runName']) {
+      for (const field of ['identifier', 'location', 'componentType', 'nodeCategory', 'units', 'interval', 'startMonth', 'endMonth', 'runName']) {
         expect(variable[field]).toBeTruthy();
       }
       expect(runs.find(run => run.id === variable.runId).variables).toContain(variable.identifier);
