@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../App.jsx';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function openVariableSearch(importedRuns) {
   render(<App importedRuns={importedRuns} />);
@@ -186,4 +189,44 @@ describe('Variable Search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
     expect(screen.getByRole('combobox', { name: 'Active run:' }).value).toBe('alternative-operations-a');
   });
+
+  it('replaces the table with an empty state and resets the whole search (SCRUM-148, SCRUM-162)', () => {
+    openVariableSearch();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'no such variable' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+
+    expect(screen.getByText('No variables match your search.')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('0 matching variables');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Search' }));
+    expect(screen.getByRole('searchbox').value).toBe('');
+    expect(document.activeElement).toBe(screen.getByRole('searchbox'));
+    expect(screen.getByRole('status').textContent).toBe('13 matching variables');
+  });
+
+  it('shows loading, then a recoverable error for an imported file it cannot read (SCRUM-149, SCRUM-150, SCRUM-158)', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    openVariableSearch([{ id: 'run-1', name: 'Run 1', file: new File(['not dss'], 'run1.dss') }]);
+    expect(screen.getByRole('status').textContent).toBe('Loading variables from run1.dss…');
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Unable to read the imported data file. Please re-import the DSS file and try again.');
+    expect(alert.textContent).not.toContain('not implemented');
+    expect(log).toHaveBeenCalled();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry Search' }));
+    expect(screen.getByRole('status')).toBeTruthy();
+    fireEvent.click(within(await screen.findByRole('alert')).getByRole('button', { name: 'Re-import File' }));
+    expect(screen.getByRole('heading', { name: 'Import Data' })).toBeTruthy();
+  });
+});
+
+// Sprint 2 work the scaffold leaves open.
+describe('Variable Search follow-ups', () => {
+  it.todo('SCRUM-159: lists the variables and locations parsed from an imported DSS file');
+  it.todo('SCRUM-160: filters by Component Type, Node Category, and Water Year Type');
+  it.todo('SCRUM-161: pages through large result sets');
+  it.todo('SCRUM-163: prompts for an import when no DSS file is loaded');
+  it.todo('SCRUM-149: shows the search-failed message and Try Again for a failed search');
 });
