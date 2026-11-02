@@ -8,6 +8,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../App.jsx';
 import { formatFileSize, validateDssFile } from '../features/importData/validateDssFile.js';
+import { fileNameToRunName, RUN_NAME_MAX_LENGTH } from '../features/importData/fileNameToRunName.js';
+import { validateRunMetadata } from '../features/importData/validateRunMetadata.js';
  
 afterEach(() => {
   cleanup();
@@ -64,6 +66,33 @@ function browseFor(file) {
   fireEvent.change(fileInput(), { target: { files: [file] } });
 }
  
+function runNameBox() {
+  return page().getByRole('textbox', { name: 'Run name' });
+}
+ 
+function descriptionBox() {
+  return page().getByRole('textbox', { name: 'Description' });
+}
+ 
+// Text of each field's inline error line ('' = no error showing).
+// getElementById because the line has no role; its id is what the input's
+// aria-describedby points at, so this checks the same element a screen reader reads.
+function runNameError() {
+  return document.getElementById('import-run-name-error').textContent;
+}
+ 
+function descriptionError() {
+  return document.getElementById('import-description-error').textContent;
+}
+ 
+// Current text in the Run name box.
+function runNameValue() {
+  return page().getByRole('textbox', { name: 'Run name' }).value;
+}
+ 
+// NOTE (SCRUM-124): "Baseline 2025" is a mock run, so it now counts as a
+// DUPLICATE name. Tests that need a valid, enabled form use "Scenario 2026"
+// (or scenario_2026.dss) instead.
 function typeRunName(value) {
   fireEvent.change(page().getByRole('textbox', { name: 'Run name' }), { target: { value } });
 }
@@ -85,6 +114,30 @@ describe('Import Data page', () => {
     expect(dropZone().dataset.state).toBe('idle');
   });
  
+  // ---------- Run name + Description fields (SCRUM-121) ----------
+ 
+  it('shows labelled, empty Run name and Description fields that update as the user types', () => {
+    openImportData();
+    // getByRole('textbox', { name }) only works if the <label> is correctly
+    // tied to its input, so finding them this way also proves the labels work
+    // (clicking a tied label focuses its input in a real browser).
+    const runName = page().getByRole('textbox', { name: 'Run name' });
+    const description = page().getByRole('textbox', { name: 'Description' });
+ 
+    // The Figma text is placeholder (grey hint), not a pre-filled value.
+    expect(runName.value).toBe('');
+    expect(runName.placeholder).toBe('Baseline 2025');
+    expect(description.value).toBe('');
+    expect(description.placeholder).toBe('Reference simulation run');
+ 
+    // Controlled inputs: React state drives the value, so after a change event
+    // the DOM value reflects what was typed.
+    fireEvent.change(runName, { target: { value: 'Alternative A' } });
+    fireEvent.change(description, { target: { value: 'Higher Delta outflow' } });
+    expect(runName.value).toBe('Alternative A');
+    expect(description.value).toBe('Higher Delta outflow');
+  });
+ 
   // ---------- Browse Files (SCRUM-117) ----------
  
   it('Browse Files opens the native file dialog filtered to .dss', () => {
@@ -102,17 +155,20 @@ describe('Import Data page', () => {
  
   it('stores a browsed .dss file in the form and shows its name and size (SCRUM-119)', () => {
     openImportData();
-    browseFor(makeFile('baseline_2025.dss', 'x'.repeat(2048)));
+    browseFor(makeFile('scenario_2026.dss', 'x'.repeat(2048)));
  
     expect(dropZone().dataset.state).toBe('selected');
     expect(page().getByRole('heading', { name: 'Selected file' })).toBeTruthy();
-    expect(page().getByText('baseline_2025.dss')).toBeTruthy();
+    expect(page().getByText('scenario_2026.dss')).toBeTruthy();
     expect(page().getByText('2.0 KB')).toBeTruthy();
     // Browse relabels once a file is chosen, and Remove appears.
     expect(page().getByRole('button', { name: 'Choose a Different File' })).toBeTruthy();
     expect(page().getByRole('button', { name: 'Remove' })).toBeTruthy();
-    // Still disabled: the run name is empty.
-    expect(importButton().disabled).toBe(true);
+    // SCRUM-122: the run name auto-fills from the file name, so with a valid
+    // file AND a name, Import is now enabled. (Before SCRUM-122 this test
+    // expected "disabled" because the name stayed empty.)
+    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('scenario 2026');
+    expect(importButton().disabled).toBe(false);
   });
  
   // ---------- validation (SCRUM-118) ----------
@@ -136,7 +192,7 @@ describe('Import Data page', () => {
   it('an invalid file replaces a previously valid one, so Import cannot use a stale file', () => {
     openImportData();
     browseFor(makeFile('good.dss'));
-    typeRunName('Baseline 2025');
+    typeRunName('Scenario 2026');
     expect(importButton().disabled).toBe(false);
  
     browseFor(makeFile('bad.csv'));
@@ -236,7 +292,7 @@ describe('Import Data page', () => {
  
   it('enables Import Data only when there is a valid file AND a run name', () => {
     openImportData();
-    typeRunName('Baseline 2025');
+    typeRunName('Scenario 2026');
     expect(importButton().disabled).toBe(true); // name, no file
  
     browseFor(makeFile('baseline.dss'));
@@ -245,42 +301,274 @@ describe('Import Data page', () => {
     typeRunName('   ');
     expect(importButton().disabled).toBe(true); // spaces-only name doesn't count
  
-    typeRunName('Baseline 2025');
+    typeRunName('Scenario 2026');
     fireEvent.click(page().getByRole('button', { name: 'Remove' }));
     expect(importButton().disabled).toBe(true); // file removed
     expect(dropZone().dataset.state).toBe('idle');
   });
  
+  // ---------- auto-fill run name from the file name (SCRUM-122) ----------
+ 
+  it('auto-fills Run name from a browsed .dss file name (Figma example)', () => {
+    openImportData();
+    browseFor(makeFile('DCR2023_DV_9.3.1_v2a_Danube_Adj_v1.8.dss'));
+    expect(runNameValue()).toBe('DCR2023 DV 9.3.1 v2a Danube Adj v1.8');
+  });
+ 
+  it('auto-fills Run name from a dropped .dss file too', () => {
+    openImportData();
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('alternative_a.dss')]) });
+    expect(runNameValue()).toBe('alternative a');
+  });
+ 
+  it('keeps a name the user typed when a file is selected afterwards', () => {
+    openImportData();
+    typeRunName('My Baseline');
+    browseFor(makeFile('baseline_2025.dss'));
+    expect(runNameValue()).toBe('My Baseline');
+  });
+ 
+  it('replaces an auto-filled name when a different file is selected (no typing in between)', () => {
+    openImportData();
+    browseFor(makeFile('file_a.dss'));
+    expect(runNameValue()).toBe('file a');
+ 
+    browseFor(makeFile('file_b.dss'));
+    expect(runNameValue()).toBe('file b');
+  });
+ 
+  it('auto-fills again after the user clears Run name completely', () => {
+    openImportData();
+    typeRunName('Typed name');
+    typeRunName(''); // cleared: the "user edited" flag turns off
+    browseFor(makeFile('baseline_2025.dss'));
+    expect(runNameValue()).toBe('baseline 2025');
+  });
+ 
+  it('an invalid file never changes Run name (empty or auto-filled)', () => {
+    openImportData();
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('not-a-dss.txt')]) });
+    expect(runNameValue()).toBe(''); // stays empty
+ 
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.drop(dropZone(), { dataTransfer: fileDragData([makeFile('not-a-dss.txt')]) });
+    expect(runNameValue()).toBe('baseline 2025'); // keeps the earlier auto-fill
+  });
+ 
+  it('cuts a very long auto-filled name to the maximum length', () => {
+    openImportData();
+    browseFor(makeFile(`${'a'.repeat(150)}.dss`));
+    expect(runNameValue().length).toBe(RUN_NAME_MAX_LENGTH);
+  });
+ 
+  it('Remove clears an auto-filled name but keeps a typed one', () => {
+    openImportData();
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.click(page().getByRole('button', { name: 'Remove' }));
+    expect(runNameValue()).toBe(''); // came from the file, so it goes with it
+ 
+    typeRunName('Typed name');
+    browseFor(makeFile('baseline_2025.dss'));
+    fireEvent.click(page().getByRole('button', { name: 'Remove' }));
+    expect(runNameValue()).toBe('Typed name'); // the user's own name stays
+  });
+ 
+  // ---------- run name + description validation (SCRUM-124) ----------
+ 
+  it('does not show a Run name error while typing, only after leaving the field', () => {
+    openImportData();
+    typeRunName('Baseline 2025'); // a duplicate, but the user hasn't left the field yet
+    expect(runNameError()).toBe('');
+ 
+    fireEvent.blur(runNameBox());
+    expect(runNameError()).toBe('A run named "Baseline 2025" already exists. Choose a different name.');
+  });
+ 
+  it('shows the duplicate-name error and keeps Import disabled (trimmed, any case)', () => {
+    openImportData();
+    browseFor(makeFile('good.dss'));
+ 
+    // ' baseline 2025 ' matches the mock run "Baseline 2025" after trimming + lowercasing.
+    typeRunName(' baseline 2025 ');
+    fireEvent.blur(runNameBox());
+ 
+    expect(runNameError()).toBe('A run named "baseline 2025" already exists. Choose a different name.');
+    expect(importButton().disabled).toBe(true);
+  });
+ 
+  it('ties a visible error to its input with aria-describedby and aria-invalid', () => {
+    openImportData();
+    expect(runNameBox().getAttribute('aria-describedby')).toBeNull(); // no error yet
+ 
+    fireEvent.blur(runNameBox()); // leave it empty
+    expect(runNameError()).toBe('Run name is required.');
+    expect(runNameBox().getAttribute('aria-describedby')).toBe('import-run-name-error');
+    expect(runNameBox().getAttribute('aria-invalid')).toBe('true');
+  });
+ 
+  it('shows the too-long Run name error', () => {
+    openImportData();
+    typeRunName('x'.repeat(101));
+    fireEvent.blur(runNameBox());
+    expect(runNameError()).toBe('Run name must be 100 characters or fewer.');
+  });
+ 
+  it('clears the error as soon as the input is fixed, and Import enables', () => {
+    openImportData();
+    browseFor(makeFile('good.dss'));
+    typeRunName('Baseline 2025');
+    fireEvent.blur(runNameBox());
+    expect(importButton().disabled).toBe(true);
+ 
+    typeRunName('Scenario 2026'); // no blur needed: once touched, errors update live
+    expect(runNameError()).toBe('');
+    expect(runNameBox().getAttribute('aria-invalid')).toBeNull();
+    expect(importButton().disabled).toBe(false);
+  });
+ 
+  it('shows the duplicate error right away when a file auto-fills a taken name', () => {
+    openImportData();
+    browseFor(makeFile('Baseline_2025.dss')); // auto-fills "Baseline 2025"
+    expect(runNameError()).toBe('A run named "Baseline 2025" already exists. Choose a different name.');
+    expect(importButton().disabled).toBe(true);
+  });
+ 
+  it('allows an empty Description but rejects one over 500 characters', () => {
+    openImportData();
+    browseFor(makeFile('scenario_2026.dss'));
+    fireEvent.blur(descriptionBox()); // empty Description is fine
+    expect(descriptionError()).toBe('');
+    expect(importButton().disabled).toBe(false);
+ 
+    fireEvent.change(descriptionBox(), { target: { value: 'd'.repeat(501) } });
+    fireEvent.blur(descriptionBox());
+    expect(descriptionError()).toBe('Description must be 500 characters or fewer.');
+    expect(descriptionBox().getAttribute('aria-describedby')).toBe('import-description-error');
+    expect(importButton().disabled).toBe(true);
+  });
+ 
+  it('keeps Import disabled while Run name is empty, even before any error is shown', () => {
+    openImportData();
+    browseFor(makeFile('good.dss'));
+    typeRunName(''); // user cleared the auto-filled name but hasn't left the field
+    expect(importButton().disabled).toBe(true);
+  });
+ 
   it('Import confirms the run and file names, then clears the form', () => {
     openImportData();
     browseFor(makeFile('baseline.dss'));
-    typeRunName('  Baseline 2025  ');
+    typeRunName('  Scenario 2026  ');
     fireEvent.click(importButton());
  
     expect(screen.getByRole('status').textContent).toBe(
-      '"Baseline 2025" was imported from baseline.dss and is now the active run.',
+      '"Scenario 2026" was imported from baseline.dss and is now the active run.',
     );
     expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('');
     expect(importButton().disabled).toBe(true);
   });
- 
-  it('Cancel resets the file, fields, error and status', () => {
+
+  it('after an import, shows no field error and auto-fills from the next file', () => {
     openImportData();
-    browseFor(makeFile('baseline.dss'));
-    typeRunName('Baseline 2025');
-    fireEvent.change(page().getByRole('textbox', { name: 'Description' }), {
-      target: { value: 'Reference simulation run' },
-    });
+    browseFor(makeFile('a.dss'));
+    typeRunName('Scenario 2026');
     fireEvent.click(importButton());
+    expect(runNameError()).toBe('');
+
+    browseFor(makeFile('second_file.dss'));
+    expect(runNameValue()).toBe('second file');
+  });
+
+  it('a run imported this session counts as an existing name', () => {
+    openImportData();
+    browseFor(makeFile('scenario_2026.dss'));
+    fireEvent.click(importButton());
+
+    browseFor(makeFile('scenario_2026.dss'));
+    expect(runNameError()).toBe('A run named "scenario 2026" already exists. Choose a different name.');
+    expect(importButton().disabled).toBe(true);
+  });
+ 
+  // ---------- Cancel (SCRUM-123) ----------
+ 
+  it('Cancel puts everything back to its starting state (ticket scenario)', () => {
+    openImportData();
+    // Build up as much state as possible: file, description, an error, a status.
+    browseFor(makeFile('baseline.dss'));
+    typeRunName('Baseline 2025'); // duplicate...
+    fireEvent.blur(runNameBox()); // ...shown as an error
+    expect(runNameError()).not.toBe('');
+    fireEvent.change(descriptionBox(), { target: { value: 'Reference simulation run' } });
  
     fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
  
+    // still on Import Data (Cancel doesn't navigate)
+    expect(screen.getByRole('heading', { level: 1, name: 'Import Data' })).toBeTruthy();
+    // file gone, drop zone idle
     expect(dropZone().dataset.state).toBe('idle');
     expect(page().queryByText('baseline.dss')).toBeNull();
-    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('');
-    expect(page().getByRole('textbox', { name: 'Description' }).value).toBe('');
+    // fields empty, so the placeholders show again
+    expect(runNameValue()).toBe('');
+    expect(descriptionBox().value).toBe('');
+    // no errors anywhere (and none waiting to appear, since touched was reset)
+    expect(runNameError()).toBe('');
+    expect(descriptionError()).toBe('');
+    expect(runNameBox().getAttribute('aria-invalid')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toBe('');
+    // nothing to submit
     expect(screen.getByRole('status').textContent).toBe('');
     expect(importButton().disabled).toBe(true);
+    // hidden file input is empty, ready for a fresh pick
+    expect(fileInput().value).toBe('');
+  });
+ 
+  it('Cancel clears the prototype status message after an Import', () => {
+    openImportData();
+    browseFor(makeFile('scenario_2026.dss'));
+    fireEvent.click(importButton());
+    expect(screen.getByRole('status').textContent).not.toBe('');
+ 
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+ 
+  it('Cancel clears a drop zone error', () => {
+    openImportData();
+    browseFor(makeFile('notes.txt'));
+    expect(dropZone().dataset.state).toBe('error');
+ 
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(dropZone().dataset.state).toBe('idle');
+    expect(screen.getByRole('alert').textContent).toBe('');
+  });
+ 
+  it('after Cancel, the next file auto-fills again (user-edited flag reset)', () => {
+    openImportData();
+    typeRunName('Typed name'); // turns the "user edited" flag on
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+ 
+    browseFor(makeFile('scenario_2026.dss'));
+    expect(runNameValue()).toBe('scenario 2026');
+  });
+ 
+  it('after Cancel, leaving the empty Run name shows the error again only on blur', () => {
+    openImportData();
+    fireEvent.blur(runNameBox()); // touched -> "Run name is required."
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(runNameError()).toBe(''); // touched was reset, so nothing shows
+ 
+    fireEvent.blur(runNameBox());
+    expect(runNameError()).toBe('Run name is required.'); // the normal rule still works
+  });
+ 
+  it('the same file can be chosen again right after Cancel', () => {
+    openImportData();
+    const file = makeFile('scenario_2026.dss');
+    browseFor(file);
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+ 
+    browseFor(file);
+    expect(dropZone().dataset.state).toBe('selected');
+    expect(page().getByText('scenario_2026.dss')).toBeTruthy();
   });
 });
  
@@ -309,3 +597,84 @@ describe('formatFileSize', () => {
     expect(formatFileSize(bytes)).toBe(expected);
   });
 });
+ 
+describe('fileNameToRunName (SCRUM-122)', () => {
+  // it.each runs the same test once per row: [input file name, expected run name].
+  it.each([
+    // the Figma example: only the LAST extension goes, version dots stay
+    ['DCR2023_DV_9.3.1_v2a_Danube_Adj_v1.8.dss', 'DCR2023 DV 9.3.1 v2a Danube Adj v1.8'],
+    ['baseline_2025.dss', 'baseline 2025'], // underscores -> spaces
+    ['BASELINE.DSS', 'BASELINE'], // uppercase extension is removed too
+    ['run.v2.dss', 'run.v2'], // multiple dots: only the last one is an extension
+    ['alt__ops___a.dss', 'alt ops a'], // repeated underscores collapse to one space
+    ['_ padded _ name _.dss', 'padded name'], // mixed underscores/spaces collapse; ends trimmed
+  ])('turns %s into "%s"', (fileName, expected) => {
+    expect(fileNameToRunName(fileName)).toBe(expected);
+  });
+ 
+  it(`never returns more than ${RUN_NAME_MAX_LENGTH} characters`, () => {
+    expect(fileNameToRunName(`${'x'.repeat(250)}.dss`)).toBe('x'.repeat(RUN_NAME_MAX_LENGTH));
+  });
+ 
+  it('does not leave a trailing space when the cut lands on a space', () => {
+    // 99 letters, then an underscore at position 100 (becomes a space), then more
+    const name = `${'x'.repeat(99)}_yyy.dss`;
+    expect(fileNameToRunName(name)).toBe('x'.repeat(99));
+  });
+});
+ 
+describe('validateRunMetadata (SCRUM-124)', () => {
+  const existingNames = ['Baseline 2025', 'Alternative Operations A'];
+  // Small helper so each test only spells out what it cares about.
+  const check = (name, description = '') => validateRunMetadata({ name, description, existingNames });
+  const noErrors = { runName: '', description: '' };
+ 
+  it('accepts a new name with an empty description', () => {
+    expect(check('Scenario 2026')).toEqual(noErrors);
+  });
+ 
+  it.each(['', '   '])('requires a run name (%j)', name => {
+    expect(check(name).runName).toBe('Run name is required.');
+  });
+ 
+  it('allows exactly 100 characters but not 101', () => {
+    expect(check('x'.repeat(100)).runName).toBe('');
+    expect(check('x'.repeat(101)).runName).toBe('Run name must be 100 characters or fewer.');
+  });
+ 
+  it('measures length after trimming, so outer spaces do not count', () => {
+    expect(check(`  ${'x'.repeat(100)}  `).runName).toBe('');
+  });
+ 
+  it.each(['Baseline 2025', ' Baseline 2025 ', 'baseline 2025', 'BASELINE 2025'])(
+    'treats %j as a duplicate of "Baseline 2025"',
+    name => {
+      expect(check(name).runName).toBe(
+        `A run named "${name.trim()}" already exists. Choose a different name.`,
+      );
+    },
+  );
+ 
+  it('does not flag names that only partly match', () => {
+    expect(check('Baseline 2025 v2').runName).toBe('');
+  });
+ 
+  it('works with no existing names passed in', () => {
+    expect(validateRunMetadata({ name: 'Baseline 2025', description: '' })).toEqual(noErrors);
+  });
+ 
+  it('allows a 500-character description but not 501', () => {
+    expect(check('Scenario 2026', 'd'.repeat(500)).description).toBe('');
+    expect(check('Scenario 2026', 'd'.repeat(501)).description).toBe(
+      'Description must be 500 characters or fewer.',
+    );
+  });
+ 
+  it('reports both fields at once when both are wrong', () => {
+    expect(check('', 'd'.repeat(501))).toEqual({
+      runName: 'Run name is required.',
+      description: 'Description must be 500 characters or fewer.',
+    });
+  });
+});
+ 

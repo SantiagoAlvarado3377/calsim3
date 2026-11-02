@@ -4,6 +4,7 @@ import DataExplorer from './pages/DataExplorer';
 import CompareRuns from './pages/CompareRuns';
 import VariableSearch from './pages/VariableSearch';
 import ImportData from './pages/ImportData'; 
+import { mockSimulationRuns } from './data/mockSimulationRuns.js';
 import SimulationRuns from './pages/SimulationRuns';
 import PageHeader from './components/PageHeader.jsx';
 import { ActiveRunContext } from './components/ActiveRunContext.js';
@@ -71,7 +72,11 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, on
     if (currentPage === 'data-explorer') return <DataExplorer />;
     if (currentPage === 'compare-runs') return <CompareRuns />;
     if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
-    if (currentPage === 'import-data') return <ImportData onNavigate={onNavigate} onImport={onImport} />;
+    if (currentPage === 'import-data') {
+        // SCRUM-124: names taken = the sample runs plus runs imported this session.
+        const existingRunNames = [...mockSimulationRuns, ...importedRuns].map(run => run.name);
+        return <ImportData onNavigate={onNavigate} onImport={onImport} existingRunNames={existingRunNames} />;
+    }
 
     return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
 }

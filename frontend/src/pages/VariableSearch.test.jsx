@@ -261,13 +261,13 @@ describe('Variable Search', () => {
     fireEvent.click(within(nav).getByRole('button', { name: 'Import Data' }));
     const form = screen.getByRole('form', { name: 'Import simulation run' });
     fireEvent.change(within(form).getByLabelText('Choose HEC-DSS file'), { target: { files: [file] } });
-    fireEvent.change(within(form).getByLabelText('Run name'), { target: { value: 'Baseline 2025' } });
+    fireEvent.change(within(form).getByLabelText('Run name'), { target: { value: 'Scenario 2026' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Import Data' }));
     fireEvent.click(within(nav).getByRole('button', { name: 'Variable Search' }));
 
     expect(await screen.findByText('8 matching variables')).toBeTruthy();
     const shasta = screen.getByRole('row', { name: /S_SHSTA/ });
-    for (const text of ['Baseline 2025', 'SHSTA', 'STORAGE', 'TAF', '1Month', 'Oct 1921 – Sep 1951']) {
+    for (const text of ['Scenario 2026', 'SHSTA', 'STORAGE', 'TAF', '1Month', 'Oct 1921 – Sep 1951']) {
       expect(within(shasta).getByText(text)).toBeTruthy();
     }
 
@@ -277,8 +277,8 @@ describe('Variable Search', () => {
     expect(within(screen.getByRole('row', { name: /S_SHSTA/ })).getByText('4 Critical water years')).toBeTruthy();
     expect(within(screen.getByRole('row', { name: /C_SAC000/ })).getByText('2 Critical water years')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'View Chart for S_SHSTA in Baseline 2025' }));
-    expect(await screen.findByRole('img', { name: 'S_SHSTA in Baseline 2025' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'View Chart for S_SHSTA in Scenario 2026' }));
+    expect(await screen.findByRole('img', { name: 'S_SHSTA in Scenario 2026' })).toBeTruthy();
     expect(document.querySelectorAll('.variable-chart-line')).toHaveLength(4);
   });
 });
