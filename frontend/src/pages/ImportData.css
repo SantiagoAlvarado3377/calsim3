@@ -161,6 +161,28 @@
   font-weight: 700;
 }
  
+/* SCRUM-124: wrapper for one field (label + error line). It's the grid cell
+   now, so the two-column layout above is unchanged. */
+.import-data-field {
+  display: grid;
+  align-content: start; /* keep both labels level even if only one has an error */
+  gap: 6px;
+}
+ 
+/* Same look as the drop zone's error text, as the ticket asks. */
+.import-data-field-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4; /* long messages wrap to 2 lines on desktop; keep them readable */
+}
+ 
+/* Hidden while empty, so no gap appears under a field with no error. */
+.import-data-field-error:empty {
+  display: none;
+}
+ 
 /* ---------- Shared input + button look (copied from Variable Search) ---------- */
  
 .import-data-page input,
@@ -179,6 +201,12 @@
   width: 100%;
   min-width: 0;
   font-weight: 400;
+}
+ 
+/* SCRUM-124: red border on a field with a visible error (aria-invalid is only
+   set while the error shows, so styling follows the same rule as the message). */
+.import-data-page input[aria-invalid='true'] {
+  border-color: #b42318;
 }
  
 .import-data-page input::placeholder {
@@ -297,4 +325,3 @@
     flex: 1;
   }
 }
- 
