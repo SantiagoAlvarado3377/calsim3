@@ -465,23 +465,87 @@ describe('Import Data page', () => {
     );
   });
  
-  it('Cancel resets the file, fields, error and status', () => {
+  // ---------- Cancel (SCRUM-123) ----------
+ 
+  it('Cancel puts everything back to its starting state (ticket scenario)', () => {
     openImportData();
+    // Build up as much state as possible: file, description, an error, a status.
     browseFor(makeFile('baseline.dss'));
-    typeRunName('Scenario 2026');
-    fireEvent.change(page().getByRole('textbox', { name: 'Description' }), {
-      target: { value: 'Reference simulation run' },
-    });
-    fireEvent.click(importButton());
+    typeRunName('Baseline 2025'); // duplicate...
+    fireEvent.blur(runNameBox()); // ...shown as an error
+    expect(runNameError()).not.toBe('');
+    fireEvent.change(descriptionBox(), { target: { value: 'Reference simulation run' } });
  
     fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
  
+    // still on Import Data (Cancel doesn't navigate)
+    expect(screen.getByRole('heading', { level: 1, name: 'Import Data' })).toBeTruthy();
+    // file gone, drop zone idle
     expect(dropZone().dataset.state).toBe('idle');
     expect(page().queryByText('baseline.dss')).toBeNull();
-    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('');
-    expect(page().getByRole('textbox', { name: 'Description' }).value).toBe('');
+    // fields empty, so the placeholders show again
+    expect(runNameValue()).toBe('');
+    expect(descriptionBox().value).toBe('');
+    // no errors anywhere (and none waiting to appear, since touched was reset)
+    expect(runNameError()).toBe('');
+    expect(descriptionError()).toBe('');
+    expect(runNameBox().getAttribute('aria-invalid')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toBe('');
+    // nothing to submit
     expect(screen.getByRole('status').textContent).toBe('');
     expect(importButton().disabled).toBe(true);
+    // hidden file input is empty, ready for a fresh pick
+    expect(fileInput().value).toBe('');
+  });
+ 
+  it('Cancel clears the prototype status message after an Import', () => {
+    openImportData();
+    browseFor(makeFile('scenario_2026.dss'));
+    fireEvent.click(importButton());
+    expect(screen.getByRole('status').textContent).not.toBe('');
+ 
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+ 
+  it('Cancel clears a drop zone error', () => {
+    openImportData();
+    browseFor(makeFile('notes.txt'));
+    expect(dropZone().dataset.state).toBe('error');
+ 
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(dropZone().dataset.state).toBe('idle');
+    expect(screen.getByRole('alert').textContent).toBe('');
+  });
+ 
+  it('after Cancel, the next file auto-fills again (user-edited flag reset)', () => {
+    openImportData();
+    typeRunName('Typed name'); // turns the "user edited" flag on
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+ 
+    browseFor(makeFile('scenario_2026.dss'));
+    expect(runNameValue()).toBe('scenario 2026');
+  });
+ 
+  it('after Cancel, leaving the empty Run name shows the error again only on blur', () => {
+    openImportData();
+    fireEvent.blur(runNameBox()); // touched -> "Run name is required."
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+    expect(runNameError()).toBe(''); // touched was reset, so nothing shows
+ 
+    fireEvent.blur(runNameBox());
+    expect(runNameError()).toBe('Run name is required.'); // the normal rule still works
+  });
+ 
+  it('the same file can be chosen again right after Cancel', () => {
+    openImportData();
+    const file = makeFile('scenario_2026.dss');
+    browseFor(file);
+    fireEvent.click(page().getByRole('button', { name: 'Cancel' }));
+ 
+    browseFor(file);
+    expect(dropZone().dataset.state).toBe('selected');
+    expect(page().getByText('scenario_2026.dss')).toBeTruthy();
   });
 });
  

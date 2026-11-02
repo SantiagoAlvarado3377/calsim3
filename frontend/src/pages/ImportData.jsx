@@ -196,10 +196,24 @@ function ImportData({ existingRunNames = mockRunNames }) {
     );
   }
  
+  // SCRUM-123: Cancel = "start over". Put EVERY piece of form state back to its
+  // starting value, and stay on this page (no onNavigate call).
+  // Checklist of what the earlier subtasks added, so nothing is missed:
+  //   SCRUM-114/118/119: selectedFile, fileError, statusMessage
+  //   SCRUM-121:         fields (Run name + Description text)
+  //   SCRUM-122:         runNameEdited (so the next file auto-fills again)
+  //   SCRUM-124:         touched (so no "Run name is required." greets the user)
+  // Validation errors don't need resetting: they're derived from fields +
+  // touched, so they disappear on their own once those are reset.
+  // The hidden <input type="file"> also doesn't need resetting here:
+  // DssDropZone clears its value right after every pick, so choosing the same
+  // file again after Cancel still fires a change.
   function handleCancel() {
     setSelectedFile(null);
     setFileError('');
     setFields(emptyFields);
+    setRunNameEdited(false);
+    setTouched(untouchedFields);
     setStatusMessage('');
   }
  
@@ -297,3 +311,4 @@ function ImportData({ existingRunNames = mockRunNames }) {
 }
  
 export default ImportData;
+ 
