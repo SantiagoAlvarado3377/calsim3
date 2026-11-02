@@ -89,7 +89,7 @@
 
 .variable-search-filter-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) repeat(3, minmax(100px, 1fr)) auto;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   align-items: end;
   gap: 16px;
   margin-top: 24px;
@@ -166,7 +166,7 @@
   white-space: nowrap;
 }
 
-/* Loading, empty, and error states (SCRUM-147, SCRUM-158). Placeholder styling. */
+/* Loading, empty, error, and import states (SCRUM-147, SCRUM-158, SCRUM-163). */
 .variable-search-state {
   display: grid;
   gap: 12px;
@@ -185,6 +185,62 @@
 .variable-search-state--error {
   border-color: #c0392b;
   background: #fdf2f1;
+}
+
+.variable-search-state-title {
+  font-weight: 600;
+}
+
+.variable-search-state--loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.variable-search-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #d2e0ef;
+  border-top-color: #1978d5;
+  border-radius: 50%;
+  animation: variable-search-spin 0.8s linear infinite;
+}
+
+@keyframes variable-search-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .variable-search-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.variable-search-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  color: #536c85;
+  font-size: 14px;
+}
+
+.variable-search-pager label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.variable-search-pager p {
+  margin: 0;
+}
+
+.variable-search-pager-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .variable-search-state-actions {

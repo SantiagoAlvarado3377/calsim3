@@ -454,17 +454,20 @@ describe('Import Data page', () => {
     expect(importButton().disabled).toBe(true);
   });
  
-  it('Import shows the prototype confirmation with the run and file names', () => {
+  it('Import confirms the run and file names, then clears the form', () => {
     openImportData();
     browseFor(makeFile('baseline.dss'));
     typeRunName('  Scenario 2026  ');
     fireEvent.click(importButton());
  
     expect(screen.getByRole('status').textContent).toBe(
-      'Prototype mode: "Scenario 2026" from baseline.dss is ready to import.',
+      '"Scenario 2026" was imported from baseline.dss and is now the active run.',
     );
+    expect(page().getByRole('textbox', { name: 'Run name' }).value).toBe('');
+    expect(importButton().disabled).toBe(true);
   });
- 
+
+
   // ---------- Cancel (SCRUM-123) ----------
  
   it('Cancel puts everything back to its starting state (ticket scenario)', () => {

@@ -1,14 +1,22 @@
+import { WATER_YEAR_TYPES } from '../features/variableSearch/searchVariables.js';
 import { mockSimulationRuns } from './mockSimulationRuns.js';
 
 // Sample metadata only. The existing run fixtures supply run IDs and date ranges.
+const storage = { componentType: 'Storage', nodeCategory: 'Storage', units: 'TAF', interval: '1MON' };
+const flow = { componentType: 'Flow', nodeCategory: 'Channel', units: 'CFS', interval: '1MON' };
 const variableMetadata = {
-  SAMPLE_SHASTA_STORAGE: { location: 'Shasta Lake', category: 'Storage', units: 'TAF', interval: '1MON' },
-  SAMPLE_OROVILLE_STORAGE: { location: 'Lake Oroville', category: 'Storage', units: 'TAF', interval: '1MON' },
-  DELTA_OUTFLOW: { location: 'Sacramento–San Joaquin Delta', category: 'Flow', units: 'CFS', interval: '1MON' },
-  SAN_LUIS_STORAGE: { location: 'San Luis Reservoir', category: 'Storage', units: 'TAF', interval: '1MON' },
-  SAMPLE_FOLSOM_STORAGE: { location: 'Folsom Lake', category: 'Storage', units: 'TAF', interval: '1MON' },
-  SACRAMENTO_FLOW: { location: 'Sacramento River', category: 'Flow', units: 'CFS', interval: '1DAY' },
+  SAMPLE_SHASTA_STORAGE: { ...storage, location: 'Shasta Lake' },
+  SAMPLE_OROVILLE_STORAGE: { ...storage, location: 'Lake Oroville' },
+  DELTA_OUTFLOW: { ...flow, location: 'Sacramento–San Joaquin Delta' },
+  SAN_LUIS_STORAGE: { ...storage, location: 'San Luis Reservoir' },
+  SAMPLE_FOLSOM_STORAGE: { ...storage, location: 'Folsom Lake' },
+  SACRAMENTO_FLOW: { ...flow, location: 'Sacramento River', interval: '1DAY' },
 };
+
+// Synthetic water year types (not historical) for every water year the sample runs cover.
+const sampleWaterYearTypes = Object.fromEntries(
+  Array.from({ length: 19 }, (_, index) => [2010 + index, WATER_YEAR_TYPES[index % WATER_YEAR_TYPES.length]]),
+);
 
 // Keep mock data access here so a later story can replace it with the real API.
 export function getVariableSearchData() {
@@ -22,7 +30,7 @@ export function getVariableSearchData() {
     endMonth: run.endMonth,
   })));
 
-  return { runs: mockSimulationRuns, variables };
+  return { runs: mockSimulationRuns, variables, waterYearTypes: sampleWaterYearTypes };
 }
 
 // Repeating seasonal values make the mock chart predictable across page visits.

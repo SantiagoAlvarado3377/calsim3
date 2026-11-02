@@ -1,6 +1,6 @@
 // Import Data page (SCRUM-114).
 // Lets the user choose a completed CalSim 3 run's HEC-DSS (.dss) file, name the
-// run, and (in prototype mode) "import" it.
+// run, and import it for this session (Variable Search reads the file locally).
 //
 // How the pieces fit:
 //   ImportData (this file)  -> owns the form state: chosen file, error, run name, description
@@ -47,7 +47,7 @@ function InfoIcon() {
  
 // existingRunNames defaults to the mock names; tests or a future storage
 // story can pass a different list.
-function ImportData({ existingRunNames = mockRunNames }) {
+function ImportData({ onImport, existingRunNames = mockRunNames }) {
   // The File object the user chose (or null). Holding the whole File (not just
   // its name) means a later story can actually read or upload the contents.
   const [selectedFile, setSelectedFile] = useState(null);
@@ -189,11 +189,22 @@ function ImportData({ existingRunNames = mockRunNames }) {
     setTouched({ runName: true, description: true });
     if (!isFormValid) return; // belt and braces; the button is disabled anyway
  
-    // Prototype mode: actually reading and storing the run is a later story.
-    // For now, confirm what WOULD be imported so the workflow can be demoed.
+    // SCRUM-163: hand the run and its File to the app for this session so
+    // Variable Search can read it. Saving runs between sessions is SCRUM-125.
+    onImport?.({
+      id: `run-${Date.now()}`,
+      name: fields.runName.trim(),
+      description: fields.description.trim(),
+      source: selectedFile.name,
+      importedAt: new Date().toISOString(),
+      file: selectedFile,
+    });
     setStatusMessage(
-      `Prototype mode: "${fields.runName.trim()}" from ${selectedFile.name} is ready to import.`,
+      `"${fields.runName.trim()}" was imported from ${selectedFile.name} and is now the active run.`,
     );
+    // Clear the form so the same run isn't added twice.
+    setSelectedFile(null);
+    setFields(emptyFields);
   }
  
   // SCRUM-123: Cancel = "start over". Put EVERY piece of form state back to its
@@ -291,7 +302,7 @@ function ImportData({ existingRunNames = mockRunNames }) {
           </p>
  
           <p className="import-data-prototype-note">
-            Prototype mode: importing demonstrates the workflow using sample simulation results.
+            Imported runs are kept for this session. The DSS file is read on this computer; nothing is uploaded.
           </p>
  
           {/* role="status" = polite live region: screen readers read the
