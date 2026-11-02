@@ -23,7 +23,7 @@
 
 .simulation-runs-search,
 .simulation-runs-sort {
-  display: flex;
+  display: flex; 
   flex-direction: column;
   gap: 8px;
 }
