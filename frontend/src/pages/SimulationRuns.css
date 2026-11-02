@@ -1,100 +1,60 @@
-import { useState } from 'react';
-import PageHeader from '../components/PageHeader.jsx';
-import './SimulationRuns.css';
-
-// Figma sample data for SCRUM-135. No file import or backend connection yet.
-const sampleRuns = [
-  { id: 'baseline-2025', name: 'Baseline 2025', source: 'baseline_sample.dss', imported: 'Sep 30', dateRange: '2000–2025', series: 482, status: 'Ready' },
-  { id: 'alternative-a', name: 'Alternative Operations A', source: 'alternative_a.dss', imported: 'Sep 29', dateRange: '2000–2025', series: 421, status: 'Ready' },
-  { id: 'alternative-b', name: 'Alternative Operations B', source: 'alternative_b.dss', imported: 'Sep 28', dateRange: '2005–2025', series: 381, status: 'Ready' },
-];
-
-function SimulationRuns({ runs = sampleRuns }) {
-  const [search, setSearch] = useState('');
-  const [sortOrder, setSortOrder] = useState('asc');
-
-  const searchText = search.trim().toLowerCase();
-
-  const displayedRuns = runs
-    .filter(run => run.name.toLowerCase().includes(searchText))
-    .sort((a, b) => {
-      const comparison = a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
-
-  return (
-    <main className="simulation-runs" aria-labelledby="simulation-runs-title">
-      <PageHeader id="simulation-runs-title" title="Simulation Runs" />
-      <div className="simulation-runs-content">
-        <p className="simulation-runs-subtitle">Saved runs remain separate and linked to their source files</p>
-        <p className="simulation-runs-note">Sample data for prototype</p>
-
-        <div className="simulation-runs-controls">
-          <div className="simulation-runs-search">
-            <label htmlFor="run-search">Search runs</label>
-            <input
-              id="run-search"
-              type="search"
-              placeholder="Search runs by name"
-              value={search}
-              onChange={event => setSearch(event.target.value)}
-            />
-          </div>
-
-          <div className="simulation-runs-sort">
-            <label htmlFor="run-sort">Sort by</label>
-            <select
-              id="run-sort"
-              value={sortOrder}
-              onChange={event => setSortOrder(event.target.value)}
-            >
-              <option value="asc">Name: A–Z</option>
-              <option value="desc">Name: Z–A</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="simulation-runs-table-wrap" role="region" aria-label="Saved simulation runs" tabIndex={0}>
-          <table className="simulation-runs-table">
-            <caption>Saved simulation runs</caption>
-            <thead>
-              <tr>
-                <th scope="col">Run</th>
-                <th scope="col">Source</th>
-                <th scope="col">Imported</th>
-                <th scope="col">Date range</th>
-                <th scope="col">Series</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedRuns.map(run => (
-                <tr key={run.id}>
-                  <th scope="row">{run.name}</th>
-                  <td>{run.source}</td>
-                  <td>{run.imported}</td>
-                  <td>{run.dateRange}</td>
-                  <td>{run.series}</td>
-                  <td>{run.status}</td>
-                </tr>
-              ))}
-              {displayedRuns.length === 0 && (
-                <tr>
-                  <td colSpan={6}>
-                    <span role="status">
-                      {searchText
-                        ? 'No matching runs found.'
-                        : 'No saved simulation runs yet.'}
-                    </span>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-  );
+.simulation-runs {
+  flex: 1;
+  min-width: 0;
+  background: #f5f7fa;
 }
 
-export default SimulationRuns;
+.simulation-runs-content { padding: 28px 40px; }
+
+.simulation-runs-subtitle {
+  margin: 0 0 24px;
+  color: #567396;
+  line-height: 1.5;
+}
+
+.simulation-runs-note { color: #567396; font-size: 13px; }
+
+.simulation-runs-table-wrap { overflow-x: auto; }
+
+.simulation-runs-table-wrap:focus-visible {
+  outline: 2px solid #1678d4;
+  outline-offset: 3px;
+}
+
+.simulation-runs-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.simulation-runs-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.simulation-runs-table thead { background: #1c3e59; color: white; }
+.simulation-runs-table thead th { padding: 18px 24px; font-size: 14px; }
+
+.simulation-runs-table tbody th,
+.simulation-runs-table td {
+  padding: 26px 24px;
+  border: 1px solid #d0ddec;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.simulation-runs-table tbody tr { background: white; }
+.simulation-runs-table tbody tr:nth-child(even) { background: #f6f8fa; }
+.simulation-runs-table tbody th { color: #1c2d3e; }
+.simulation-runs-table td { color: #567396; }
+
+@media (max-width: 720px) {
+  .app-layout--simulation-runs { flex-direction: column; }
+  .app-layout--simulation-runs .sidebar { width: 100%; padding: 16px 20px; }
+  .app-layout--simulation-runs .sidebar h2 { margin-bottom: 12px; }
+  .simulation-runs-content { padding: 20px; }
+}
