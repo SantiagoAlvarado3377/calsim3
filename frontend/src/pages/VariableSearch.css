@@ -149,6 +149,44 @@
   background: #edf3f9;
 }
 
+.variable-search-results thead th {
+  padding: 0;
+}
+
+.variable-search-results thead th:last-child {
+  padding: 16px;
+}
+
+.variable-search-results .variable-search-sort-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.variable-search-results .variable-search-sort-button:focus-visible {
+  outline-offset: -3px;
+}
+
+.variable-search-results th[aria-sort] .variable-search-sort-button {
+  color: #125c9e;
+}
+
+.variable-search-sort-arrow {
+  font-size: 18px;
+}
+
+.variable-search-sort-note {
+  display: block;
+  margin-top: 6px;
+}
+
 .variable-search-identifier,
 .variable-search-run-name {
   display: block;
