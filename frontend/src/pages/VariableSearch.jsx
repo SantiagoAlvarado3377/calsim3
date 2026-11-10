@@ -6,6 +6,7 @@ import {
   matchingWaterYears, PAGE_SIZES, paginate, searchVariables, WATER_YEAR_TYPES,
 } from '../features/variableSearch/searchVariables.js';
 import { useVariableCatalog } from '../features/variableSearch/useVariableCatalog.js';
+import { sortVariables } from '../features/variableSearch/sortVariables.js';
 import { EmptyState, ErrorState, LoadingState, NoImportState } from '../features/variableSearch/SearchStates.jsx';
 import VariableResults, { ResultsPager } from '../features/variableSearch/VariableResults.jsx';
 import VariableDetails from '../features/variableSearch/VariableDetails.jsx';
@@ -53,6 +54,7 @@ function VariableSearch({ onNavigate }) {
   const [waterYearType, setWaterYearType] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  const [sort, setSort] = useState({ field: 'identifier', direction: 'ascending' });
   const [selectedVariable, setSelectedVariable] = useState(null);
   const chartButtonRef = useRef(null);
   const keywordRef = useRef(null);
@@ -99,7 +101,15 @@ function VariableSearch({ onNavigate }) {
   }
   const yearsById = waterYearsById(results, data.waterYearTypes, waterYearType);
   if (waterYearType) results = results.filter(variable => yearsById.get(variable.id).length > 0);
-  const shown = paginate(results, page, pageSize);
+  const shown = paginate(sortVariables(results, sort), page, pageSize);
+
+  function updateSort(field) {
+    setSort(current => ({
+      field,
+      direction: current.field === field && current.direction === 'ascending' ? 'descending' : 'ascending',
+    }));
+    setPage(1);
+  }
 
   function openDetails(variable, button) {
     chartButtonRef.current = button;
@@ -215,6 +225,8 @@ function VariableSearch({ onNavigate }) {
             <>
               <VariableResults
                 variables={shown.items}
+                sort={sort}
+                onSort={updateSort}
                 waterYearType={waterYearType}
                 yearsById={yearsById}
                 onViewChart={openDetails}

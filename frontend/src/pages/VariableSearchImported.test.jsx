@@ -63,7 +63,112 @@ function openImportedRun() {
   fireEvent.click(screen.getByRole('button', { name: 'Search variables' }));
 }
 
+function visibleIdentifiers() {
+  return within(screen.getByRole('table')).getAllByRole('row').slice(1)
+    .map(row => within(row).getByRole('rowheader').firstChild.textContent);
+}
+
 describe('Variable Search with an imported DSS file', () => {
+  it.each([
+    ['Identifier', ['A_ECHO', 'B_ZULU', 'D_ALPHA'], ['D_ALPHA', 'B_ZULU', 'A_ECHO']],
+    ['Location', ['D_ALPHA', 'A_ECHO', 'B_ZULU'], ['B_ZULU', 'A_ECHO', 'D_ALPHA']],
+    ['Component Type', ['B_ZULU', 'A_ECHO', 'D_ALPHA'], ['D_ALPHA', 'A_ECHO', 'B_ZULU']],
+    ['Units', ['A_ECHO', 'D_ALPHA', 'B_ZULU'], ['B_ZULU', 'D_ALPHA', 'A_ECHO']],
+    ['Interval', ['B_ZULU', 'A_ECHO', 'D_ALPHA'], ['D_ALPHA', 'A_ECHO', 'B_ZULU']],
+    ['Date range', ['A_ECHO', 'B_ZULU', 'D_ALPHA'], ['D_ALPHA', 'B_ZULU', 'A_ECHO']],
+  ])('sorts the imported %s column with accessible direction and action labels (SCRUM-194)', async (label, ascending, descending) => {
+    vi.mocked(readDssCatalog).mockResolvedValue([
+      { ...series('D_ALPHA', 'Storage', 'CFS'), e: '1MON', startMonth: '2010-12', endMonth: '2011-01' },
+      { ...series('B_ZULU', 'Channel', 'TAF'), e: '1DAY', startMonth: '2010-02', endMonth: '2010-11' },
+      { ...series('A_ECHO', 'Flow', 'AF'), e: '1HOUR', startMonth: '2010-02', endMonth: '2010-03' },
+    ]);
+    openImportedRun();
+    await screen.findByText('3 matching variables');
+    expect(visibleIdentifiers()).toEqual(['A_ECHO', 'B_ZULU', 'D_ALPHA']);
+    const table = screen.getByRole('table');
+    expect(within(table).getByRole('columnheader', { name: 'Identifier' }).getAttribute('aria-sort')).toBe('ascending');
+    expect(within(table).getAllByRole('button', { name: /: sort / })).toHaveLength(6);
+    expect(within(table).getByRole('columnheader', { name: 'Action' }).getAttribute('aria-sort')).toBeNull();
+
+    if (label !== 'Identifier') fireEvent.click(within(table).getByRole('button', { name: `${label}: sort ascending` }));
+    expect(visibleIdentifiers()).toEqual(ascending);
+    const button = within(table).getByRole('button', { name: `${label}: sort descending` });
+    fireEvent.click(button);
+    expect(visibleIdentifiers()).toEqual(descending);
+    expect(button.getAttribute('aria-label')).toBe(`${label}: sort ascending`);
+    expect(button.closest('th').getAttribute('aria-sort')).toBe('descending');
+    expect(table.querySelectorAll('th[aria-sort]')).toHaveLength(1);
+    expect(button.querySelector('[aria-hidden="true"]').textContent).toBe('↓');
+    fireEvent.click(button);
+    expect(visibleIdentifiers()).toEqual(ascending);
+    expect(button.querySelector('[aria-hidden="true"]').textContent).toBe('↑');
+  });
+
+  it('sorts the whole matching catalog before paging, resets page on sort, and retains sort through search and reset (SCRUM-194)', async () => {
+    openImportedRun();
+    await screen.findByText('62 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('Page 2 of 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Identifier: sort descending' }));
+    expect(screen.getByText('Page 1 of 3')).toBeTruthy();
+    expect(visibleIdentifiers().slice(0, 3)).toEqual(['WYT_SAC_', 'S_RES29', 'S_RES28']);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(visibleIdentifiers().slice(0, 3)).toEqual(['S_RES05', 'S_RES04', 'S_RES03']);
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'RES0' } });
+    // A draft keyword does not replace the existing results or page.
+    expect(screen.getByText('Page 2 of 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    expect(visibleIdentifiers()).toEqual(['S_RES09', 'S_RES08', 'S_RES07', 'S_RES06', 'S_RES05', 'S_RES04', 'S_RES03', 'S_RES02', 'S_RES01', 'S_RES00']);
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'no matches' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
+    expect(screen.getByText('No variables match your search.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Search' }));
+    expect(visibleIdentifiers().slice(0, 3)).toEqual(['WYT_SAC_', 'S_RES29', 'S_RES28']);
+    expect(screen.getByText('Page 1 of 3')).toBeTruthy();
+  });
+
+  it.each([
+    ['Run', 'run-1', 'WYT_SAC_'],
+    ['Component Type', 'STORAGE', 'S_RES29'],
+    ['Node Category', 'Storage', 'S_RES29'],
+    ['Units', 'TAF', 'S_RES29'],
+    ['Interval', '1MON', 'WYT_SAC_'],
+    ['Water Year Type', 'Wet', 'WYT_SAC_'],
+  ])('retains sorting when %s changes and when filters are cleared (SCRUM-194)', async (label, value, first) => {
+    openImportedRun();
+    await screen.findByText('62 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'Identifier: sort descending' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.change(screen.getByRole('combobox', { name: label }), { target: { value } });
+    expect(visibleIdentifiers()[0]).toBe(first);
+    expect(screen.getByRole('button', { name: 'Identifier: sort ascending' }).closest('th').getAttribute('aria-sort')).toBe('descending');
+    expect(screen.getByRole('button', { name: 'Previous' }).disabled).toBe(true);
+    if (label === 'Water Year Type') {
+      expect(screen.getByText('Date range sorting uses full date coverage, even when water year counts are shown.')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Date range: sort ascending' }).getAttribute('aria-describedby')).toBe('variable-date-sort-note');
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    expect(visibleIdentifiers()[0]).toBe('WYT_SAC_');
+    expect(screen.getByRole('columnheader', { name: 'Identifier' }).getAttribute('aria-sort')).toBe('descending');
+  });
+
+  it('keeps sorting when page size changes or a chart closes, including return focus (SCRUM-194)', async () => {
+    openImportedRun();
+    await screen.findByText('62 matching variables');
+    fireEvent.click(screen.getByRole('button', { name: 'Identifier: sort descending' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Rows per page' }), { target: { value: '50' } });
+    expect(visibleIdentifiers()).toHaveLength(50);
+    expect(visibleIdentifiers()[0]).toBe('WYT_SAC_');
+    const chartButton = screen.getByRole('button', { name: 'View Chart for S_RES29 in Run 1' });
+    fireEvent.click(chartButton);
+    await screen.findByRole('img', { name: 'S_RES29 in Run 1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
+    expect(visibleIdentifiers()[0]).toBe('WYT_SAC_');
+    expect(screen.getByRole('combobox', { name: 'Rows per page' }).value).toBe('50');
+    expect(document.activeElement).toBe(chartButton);
+  });
+
   it('lists the variables and locations read from the file (SCRUM-159)', async () => {
     openImportedRun();
     expect(screen.getByRole('status').textContent).toBe('Loading variables from run1.dss…');

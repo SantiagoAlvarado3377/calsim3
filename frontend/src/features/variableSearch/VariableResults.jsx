@@ -7,19 +7,45 @@ function dateColumn(variable, waterYearType, years) {
   return `${years.length} ${waterYearType} water ${years.length === 1 ? 'year' : 'years'}`;
 }
 
-function VariableResults({ variables, waterYearType, yearsById, onViewChart }) {
+const columns = [
+  { field: 'identifier', label: 'Identifier' },
+  { field: 'location', label: 'Location' },
+  { field: 'componentType', label: 'Component Type' },
+  { field: 'units', label: 'Units' },
+  { field: 'interval', label: 'Interval' },
+  { field: 'dateRange', label: 'Date range' },
+];
+
+function VariableResults({ variables, sort, onSort, waterYearType, yearsById, onViewChart }) {
   return (
     <div className="variable-search-table-scroll" role="region" aria-label="Variable results table" tabIndex={0}>
       <table>
-        <caption>Variable search results</caption>
+        <caption>
+          Variable search results
+          {waterYearType && <span className="variable-search-sort-note" id="variable-date-sort-note">Date range sorting uses full date coverage, even when water year counts are shown.</span>}
+        </caption>
         <thead>
           <tr>
-            <th scope="col">Identifier</th>
-            <th scope="col">Location</th>
-            <th scope="col">Component Type</th>
-            <th scope="col">Units</th>
-            <th scope="col">Interval</th>
-            <th scope="col">Date range</th>
+            {columns.map(({ field, label }) => {
+              const active = sort.field === field;
+              const nextDirection = active && sort.direction === 'ascending' ? 'descending' : 'ascending';
+              return (
+                <th key={field} scope="col" aria-sort={active ? sort.direction : undefined}>
+                  <button
+                    type="button"
+                    className="variable-search-sort-button"
+                    aria-label={`${label}: sort ${nextDirection}`}
+                    aria-describedby={field === 'dateRange' && waterYearType ? 'variable-date-sort-note' : undefined}
+                    onClick={() => onSort(field)}
+                  >
+                    {label}
+                    <span className="variable-search-sort-arrow" aria-hidden="true">
+                      {active ? (sort.direction === 'ascending' ? '↑' : '↓') : '↕'}
+                    </span>
+                  </button>
+                </th>
+              );
+            })}
             <th scope="col">Action</th>
           </tr>
         </thead>

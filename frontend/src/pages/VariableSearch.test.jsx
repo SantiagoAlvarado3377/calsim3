@@ -17,6 +17,20 @@ function openVariableSearch(importedRuns) {
 }
 
 describe('Variable Search', () => {
+  it('defaults sample results to Identifier A–Z and sorts samples with the same headers (SCRUM-194)', () => {
+    openVariableSearch();
+    const identifiers = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
+      .map(row => within(row).getByRole('rowheader').firstChild.textContent);
+    expect(identifiers()).toEqual([
+      'DELTA_OUTFLOW', 'DELTA_OUTFLOW', 'DELTA_OUTFLOW', 'SACRAMENTO_FLOW', 'SAMPLE_FOLSOM_STORAGE',
+      'SAMPLE_OROVILLE_STORAGE', 'SAMPLE_OROVILLE_STORAGE', 'SAMPLE_OROVILLE_STORAGE',
+      'SAMPLE_SHASTA_STORAGE', 'SAMPLE_SHASTA_STORAGE', 'SAMPLE_SHASTA_STORAGE', 'SAMPLE_SHASTA_STORAGE', 'SAN_LUIS_STORAGE',
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Identifier: sort descending' }));
+    expect(identifiers()[0]).toBe('SAN_LUIS_STORAGE');
+    expect(identifiers().at(-1)).toBe('DELTA_OUTFLOW');
+  });
+
   it('opens from Dashboard with an active run and the page layout', () => {
     openVariableSearch();
 
@@ -143,7 +157,7 @@ describe('Variable Search', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
-      'Identifier', 'Location', 'Component Type', 'Units', 'Interval', 'Date range', 'Action',
+      'Identifier↑', 'Location↕', 'Component Type↕', 'Units↕', 'Interval↕', 'Date range↕', 'Action',
     ]);
 
     const storageRow = within(table).getByRole('row', { name: /SAMPLE_SHASTA_STORAGE/ });

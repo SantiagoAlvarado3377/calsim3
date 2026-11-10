@@ -82,9 +82,8 @@ export async function loadDssVariables(run) {
 
     return {
       runs: [run],
-      // DSS files list records in storage order; sort so results read alphabetically.
-      variables: catalog.map(entry => toVariable(run, entry))
-        .sort((first, second) => first.identifier.localeCompare(second.identifier)),
+      // The search page applies the user's sort to matching rows before paging.
+      variables: catalog.map(entry => toVariable(run, entry)),
       waterYearTypes: await readWaterYearTypes(run.file, catalog),
     };
   } catch (error) {
