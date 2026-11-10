@@ -170,7 +170,14 @@
 }
 
 .comparison-prototype-action:not(:disabled) {
+  border-color: #1265b7;
+  background: #1265b7;
+  color: #fff;
   cursor: pointer;
+}
+
+.comparison-prototype-action:disabled {
+  opacity: 0.65;
 }
 
 .comparison-prototype-action span {
