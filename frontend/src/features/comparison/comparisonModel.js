@@ -17,6 +17,7 @@ const MONTH_NAMES = [
 ];
 
 const SAME_RUN_MESSAGE = 'Baseline and alternative runs must be different.';
+const RUN_UNAVAILABLE_MESSAGE = 'The selected simulation run is unavailable.';
 const INVALID_RANGE_MESSAGE =
   'Choose a date range within the overlap, with the start month on or before the end month.';
 const INVALID_VARIABLE_MESSAGE = 'Choose a variable available in both selected runs.';
@@ -141,7 +142,7 @@ export function transitionComparison(state, action, runs) {
     const alternativeRun = findRun(runs, state.alternativeRunId);
 
     if (!baselineRun || !alternativeRun) {
-      return { ...state, message: 'The selected simulation run is unavailable.' };
+      return { ...state, message: RUN_UNAVAILABLE_MESSAGE };
     }
 
     if (baselineRun.id === alternativeRun.id) {
@@ -167,7 +168,7 @@ export function transitionComparison(state, action, runs) {
     }
 
     if (!findRun(runs, action.runId)) {
-      return { ...state, message: 'The selected simulation run is unavailable.' };
+      return { ...state, message: RUN_UNAVAILABLE_MESSAGE };
     }
 
     return reconcileSelections(
