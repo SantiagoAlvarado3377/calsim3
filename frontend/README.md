@@ -1,19 +1,15 @@
-# React + Vite
+# CalSim 3 Copilot frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+See the [project README](../README.md) for development and portable
+Windows builds.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `npm run dev`: browser preview
+- `npm run desktop:dev`: Windows desktop development
+- `npm run desktop:start`: build and open the current UI in Electron
+- `npm run build`: production UI build
+- `npm test`: feature tests
+- `npm run lint`: code checks
+- `npm run desktop:pack`: portable Windows executable
 
 ## Variable Search (SCRUM-140–145)
 
