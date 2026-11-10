@@ -19,11 +19,11 @@ const destinations = {
 
 const sidebarDestinations = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'simulation-runs', label: 'Simulation Runs' },
-    { id: 'data-explorer', label: 'Data Explorer' },
-    { id: 'variable-search', label: 'Variable Search' },
-    { id: 'compare-runs', label: 'Compare Runs' },
     { id: 'import-data', label: 'Import Data' },
+    { id: 'simulation-runs', label: 'Simulation Runs' },
+    { id: 'variable-search', label: 'Variable Search' },
+    { id: 'data-explorer', label: 'Data Explorer' },
+    { id: 'compare-runs', label: 'Compare Runs' },
 ];
 
 // Only navigation destinations are provided here; their features belong to later work.

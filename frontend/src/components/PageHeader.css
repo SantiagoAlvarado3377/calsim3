@@ -22,12 +22,13 @@
 }
 
 .page-header .page-header-active-run {
+  --active-run-height: 44px;
   display: flex;
   align-items: center;
   gap: 4px;
   width: 270px;
   max-width: 100%;
-  min-height: 44px;
+  min-height: var(--active-run-height);
   padding: 0 12px 0 24px;
   border: 1px solid #d2e0ef;
   border-radius: 10px;
@@ -37,14 +38,14 @@
   font-weight: 600;
 }
 
-.page-header-active-run span {
+.page-header-active-run > span {
   flex-shrink: 0;
 }
 
 .page-header .page-header-active-run select {
   flex: 1;
   min-width: 0;
-  min-height: 42px;
+  min-height: calc(var(--active-run-height) - 2px);
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -68,6 +69,85 @@
 
 .page-header .page-header-active-run select:focus-visible {
   outline: none;
+}
+
+.page-header .page-header-active-run select > button {
+  display: none;
+}
+
+@supports (appearance: base-select) and selector(select::picker(select)) {
+  .page-header .page-header-active-run {
+    anchor-name: --active-run-box;
+  }
+
+  .page-header .page-header-active-run select,
+  .page-header .page-header-active-run select::picker(select) {
+    appearance: base-select;
+  }
+
+  .page-header .page-header-active-run select {
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .page-header .page-header-active-run select > button {
+    display: contents;
+  }
+
+  .page-header .page-header-active-run select > button > span {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-header .page-header-active-run select::picker-icon {
+    flex-shrink: 0;
+  }
+
+  .page-header .page-header-active-run select::picker(select) {
+    position-anchor: --active-run-box;
+    position-area: block-end span-inline-start;
+    justify-self: end;
+    box-sizing: border-box;
+    inline-size: anchor-size(width);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    scrollbar-width: none;
+    margin-block-start: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    outline: 1px solid #d2e0ef;
+    background: #fff;
+    color: #183b59;
+    box-shadow: 0 6px 18px rgb(24 59 89 / 15%);
+  }
+
+  .page-header .page-header-active-run option {
+    align-items: center;
+    block-size: var(--active-run-height);
+    min-block-size: var(--active-run-height);
+    padding: 4px 12px;
+    border-radius: 4px;
+    line-height: 18px;
+  }
+
+  .page-header .page-header-active-run option > span {
+    display: -webkit-box;
+    min-inline-size: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+  }
+
+  .page-header .page-header-active-run option:checked {
+    background: #eaf3fb;
+  }
 }
 
 @media (max-width: 650px) {
