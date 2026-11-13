@@ -108,3 +108,75 @@
   outline: 2px solid #285477;
   outline-offset: 2px;
 }
+
+.data-explorer-field input[type='date'] {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #aab7c4;
+  border-radius: 6px;
+  background: white;
+  color: #243447;
+  font: inherit;
+}
+
+.data-explorer-field input[type='date']:focus-visible {
+  outline: 2px solid #285477;
+  outline-offset: 2px;
+}
+
+.data-explorer-actions {
+  flex-basis: 100%;
+}
+
+.data-explorer-actions button {
+  padding: 12px 24px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #17324d;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.data-explorer-actions button:hover {
+  background: #285477;
+}
+
+.data-explorer-actions button:focus-visible {
+  outline: 2px solid #285477;
+  outline-offset: 3px;
+}
+
+.data-explorer-error {
+  color: #a12020;
+}
+
+.data-explorer-applied {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid #aab7c4;
+  border-radius: 6px;
+  background: white;
+}
+
+.data-explorer-applied h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+
+.data-explorer-applied dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.data-explorer-applied dt {
+  font-weight: 600;
+}
+
+.data-explorer-applied dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
