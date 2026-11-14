@@ -22,7 +22,22 @@ function PrototypeAction({
   );
 }
 
-export function ComparisonPreview({ baselineName, alternativeName, dateRange, hasOverlap }) {
+export function ComparisonPreview({
+  baselineName,
+  alternativeName,
+  dateRange,
+  overlap,
+  overlapStatus,
+}) {
+  const overlapMessage = overlapStatus === 'overlap'
+    ? `Calendar overlap: ${formatMonthRange(overlap)}`
+    : (overlapStatus === 'none'
+        ? 'No calendar date overlap'
+        : (overlapStatus === 'invalid'
+            ? 'Calendar overlap unavailable: invalid date coverage'
+            : 'Calendar overlap unavailable'));
+  const hasOverlap = overlapStatus === 'overlap';
+
   return (
     <section className="comparison-results" aria-label="Comparison preview">
       <article className="comparison-chart-card">
@@ -91,8 +106,13 @@ export function ComparisonPreview({ baselineName, alternativeName, dateRange, ha
           </div>
         </dl>
         <p className={hasOverlap ? 'comparison-overlap-status' : 'comparison-overlap-status comparison-overlap-status--invalid'}>
-          <span aria-hidden="true">{hasOverlap ? '✓' : '!'}</span>
-          {hasOverlap ? 'Overlap confirmed' : 'Overlap unavailable'}
+          <span className="comparison-overlap-icon" aria-hidden="true">
+            {hasOverlap ? '✓' : '!'}
+          </span>
+          <span>{overlapMessage}</span>
+        </p>
+        <p className="comparison-overlap-note">
+          Calendar coverage only; paired time-series data availability is not confirmed.
         </p>
         <p className="comparison-summary-unit">Monthly / TAF</p>
         <PrototypeAction>Save Comparison</PrototypeAction>

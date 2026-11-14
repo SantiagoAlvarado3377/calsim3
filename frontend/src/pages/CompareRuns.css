@@ -360,12 +360,19 @@
   font-weight: 700;
 }
 
-.comparison-overlap-status span {
+.comparison-overlap-status .comparison-overlap-icon {
   font-size: 22px;
 }
 
 .comparison-overlap-status--invalid {
   color: #a13a2d;
+}
+
+.comparison-overlap-note {
+  margin: 10px 0 0;
+  color: #5f7e9e;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .comparison-summary-unit {

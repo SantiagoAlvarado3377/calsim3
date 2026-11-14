@@ -79,7 +79,8 @@ function CompareRuns({ runs = mockSimulationRuns }) {
           baselineName={view.baselineRun?.name}
           alternativeName={view.alternativeRun?.name}
           dateRange={state.dateRange}
-          hasOverlap={Boolean(view.overlap)}
+          overlap={view.overlap}
+          overlapStatus={view.overlapStatus}
         />
       </div>
     </main>
