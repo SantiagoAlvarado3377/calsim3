@@ -229,6 +229,21 @@ function DataExplorer() {
             </dl>
           </section>
         )}
+
+        {/* scrum-19 will swap the placeholder for the real time-series chart */}
+        <section className="data-explorer-chart" aria-labelledby="chart-title">
+          <div className="data-explorer-chart-header">
+            <h2 id="chart-title">Chart</h2>
+          </div>
+
+          <div className="data-explorer-chart-placeholder">
+            <p>
+              {appliedSelections
+                ? 'The chart for these selections will appear here.'
+                : 'Apply your selections to view the chart.'}
+            </p>
+          </div>
+        </section>
       </div>
     </main>
   );
