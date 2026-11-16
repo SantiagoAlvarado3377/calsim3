@@ -61,6 +61,9 @@ describe('Variable Search', () => {
     const anomalyInput = screen.getByRole('region', { name: 'Selected analysis input' });
     expect(within(anomalyInput).getByText('DELTA_OUTFLOW')).toBeTruthy();
     expect(within(anomalyInput).getByText('Alternative Operations A')).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Simulation run' }).value).toBe('alternative-operations-a');
+    expect(screen.getByRole('combobox', { name: 'Supported monthly variable' }).value).toBe('DELTA_OUTFLOW');
+    expect(screen.getByRole('combobox', { name: 'Date range' }).value).toBe('2019-01/2026-12');
     fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
   });

@@ -1,0 +1,16 @@
+appId: org.calsim3.copilot
+productName: CalSim 3 Copilot
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+win:
+  signExecutable: false
+  target:
+    - target: portable
+      arch: [x64]
+  artifactName: CalSim3-Copilot-${version}-portable.${ext}
+portable:
+  requestExecutionLevel: user
