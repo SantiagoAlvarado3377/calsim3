@@ -231,9 +231,15 @@ function DataExplorer() {
         )}
 
         {/* scrum-19 will swap the placeholder for the real time-series chart */}
-        <section className="data-explorer-chart" aria-labelledby="chart-title">
+        <section
+          className="data-explorer-chart"
+          aria-labelledby="chart-variable-name"
+        >
           <div className="data-explorer-chart-header">
-            <h2 id="chart-title">Chart</h2>
+            {/* uses the applied variable so editing the dropdown alone does not change it */}
+            <h2 id="chart-variable-name">
+              {appliedVariable ? appliedVariable.name : 'Chart'}
+            </h2>
           </div>
 
           <div className="data-explorer-chart-placeholder">
