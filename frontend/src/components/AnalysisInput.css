@@ -1,0 +1,30 @@
+.analysis-input {
+    padding: 20px 24px;
+    border: 1px solid #a9ccea;
+    border-radius: 12px;
+    background: #edf6ff;
+    color: #243447;
+}
+
+.analysis-input h2 {
+    margin: 0 0 16px;
+    font-size: 20px;
+}
+
+.analysis-input dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    margin: 0;
+}
+
+.analysis-input dt {
+    color: #536c85;
+    font-size: 13px;
+}
+
+.analysis-input dd {
+    margin: 6px 0 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}

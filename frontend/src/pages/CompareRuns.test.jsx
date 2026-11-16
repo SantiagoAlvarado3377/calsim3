@@ -1,10 +1,37 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import CompareRuns from './CompareRuns.jsx';
 
 afterEach(cleanup);
+
+it('preserves the Variable Search handoff while applying a comparison', async () => {
+  const compare = vi.fn().mockResolvedValue({
+    ok: false,
+    error: { message: 'No paired observations available.' },
+  });
+  const analysisSelection = {
+    variable: { identifier: 'S_SHSTA', units: 'TAF', interval: '1MON' },
+    run: { name: 'Imported run', file: new File([], 'imported.dss') },
+  };
+  render(<CompareRuns compare={compare} analysisSelection={analysisSelection} />);
+
+  const receipt = within(screen.getByRole('region', { name: 'Selected analysis input' }));
+  expect(receipt.getByText('S_SHSTA')).toBeTruthy();
+  expect(receipt.getByText('Imported run')).toBeTruthy();
+  expect(receipt.getByText('imported.dss')).toBeTruthy();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Apply Comparison' }));
+  expect(compare).toHaveBeenCalledWith({
+    baselineRunId: 'baseline-2025',
+    alternativeRunId: 'alternative-operations-a',
+    variableId: 'SAMPLE_SHASTA_STORAGE',
+    range: { start: '2020-01', end: '2025-12' },
+  });
+  expect((await screen.findByRole('alert')).textContent).toBe('No paired observations available.');
+  expect(receipt.getByText('S_SHSTA')).toBeTruthy();
+});
 
 function run(id, startMonth, endMonth) {
   return {

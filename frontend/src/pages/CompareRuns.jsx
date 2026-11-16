@@ -10,10 +10,11 @@ import {
 } from '../features/comparison/comparisonModel.js';
 import { compareFixtureMonthlyRuns } from '../features/comparison/fixtureComparisonProvider.js';
 import './CompareRuns.css';
+import AnalysisInput from '../components/AnalysisInput.jsx';
 
 const idleRequest = { status: 'idle', result: null, error: null };
 
-function CompareRuns({ runs = mockSimulationRuns, compare = compareFixtureMonthlyRuns }) {
+function CompareRuns({ runs = mockSimulationRuns, compare = compareFixtureMonthlyRuns, analysisSelection }) {
   const [state, dispatch] = useReducer(
     (currentState, action) => transitionComparison(currentState, action, runs),
     runs,
@@ -92,6 +93,10 @@ function CompareRuns({ runs = mockSimulationRuns, compare = compareFixtureMonthl
       <PageHeader id="comparison-title" title="Compare Simulation Runs" />
 
       <div className="comparison-workspace">
+        <AnalysisInput selection={analysisSelection} />
+        {analysisSelection && (
+          <p>The selected input has been received. The comparison controls and charts below use sample data; comparison calculations for this input are not available yet.</p>
+        )}
         <ComparisonControls
           runs={runs}
           baselineRunId={state.baselineRunId}
