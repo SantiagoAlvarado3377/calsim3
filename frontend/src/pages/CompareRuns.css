@@ -198,6 +198,73 @@
   gap: 32px;
 }
 
+.comparison-applied-results {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
+}
+
+.comparison-applied-card {
+  min-width: 0;
+  padding: 36px 38px 32px;
+  border: 1px solid #cbdced;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.comparison-fixture-notice {
+  margin: 8px 0 0;
+  color: #9a5b18;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.comparison-applied-variable,
+.comparison-applied-label {
+  margin: 0;
+  color: #315779;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.comparison-table-wrap {
+  margin-top: 26px;
+  overflow-x: auto;
+}
+
+.comparison-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table-wrap th,
+.comparison-table-wrap td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #d9e5f0;
+  text-align: right;
+}
+
+.comparison-table-wrap th:first-child {
+  text-align: left;
+}
+
+.comparison-table-wrap thead th {
+  color: #456684;
+  font-size: 13px;
+}
+
+.comparison-table-wrap tbody th {
+  color: #315779;
+  font-weight: 600;
+}
+
+.comparison-table-wrap tbody td {
+  color: #172839;
+  font-variant-numeric: tabular-nums;
+}
+
 .comparison-chart-card,
 .comparison-summary-card {
   border: 1px solid #cbdced;
@@ -350,6 +417,15 @@
   line-height: 1;
 }
 
+.comparison-summary-card .comparison-summary-text {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.comparison-summary-card > .comparison-applied-label {
+  margin-bottom: 26px;
+}
+
 .comparison-overlap-status {
   display: flex;
   align-items: center;
@@ -360,12 +436,19 @@
   font-weight: 700;
 }
 
-.comparison-overlap-status span {
+.comparison-overlap-status .comparison-overlap-icon {
   font-size: 22px;
 }
 
 .comparison-overlap-status--invalid {
   color: #a13a2d;
+}
+
+.comparison-overlap-note {
+  margin: 10px 0 0;
+  color: #5f7e9e;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .comparison-summary-unit {
@@ -387,10 +470,16 @@
     grid-template-columns: minmax(0, 1fr) 270px;
     gap: 22px;
   }
+
+  .comparison-applied-results {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 22px;
+  }
 }
 
 @media (max-width: 1000px) {
-  .comparison-results {
+  .comparison-results,
+  .comparison-applied-results {
     grid-template-columns: 1fr;
   }
 
@@ -436,6 +525,7 @@
   }
 
   .comparison-chart-card,
+  .comparison-applied-card,
   .comparison-summary-card {
     padding: 26px 20px;
     border-radius: 18px;
