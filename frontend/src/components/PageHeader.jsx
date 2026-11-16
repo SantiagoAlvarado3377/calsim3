@@ -2,7 +2,7 @@ import { useContext, useId } from 'react';
 import { ActiveRunContext } from './ActiveRunContext.js';
 import './PageHeader.css';
 
-function PageHeader({ title, id }) {
+function PageHeader({ title, id, activeRunDisabled = false }) {
   const { runs, activeRunId, onActiveRunChange } = useContext(ActiveRunContext);
   const selectId = useId();
   const activeRunName = runs.find(run => run.id === activeRunId)?.name ?? 'No imported runs';
@@ -16,7 +16,7 @@ function PageHeader({ title, id }) {
           id={selectId}
           value={activeRunId}
           title={activeRunName}
-          disabled={runs.length === 0}
+          disabled={activeRunDisabled || runs.length === 0}
           onChange={event => onActiveRunChange(event.target.value)}
         >
           <button type="button" aria-hidden="true"><span>{activeRunName}</span></button>

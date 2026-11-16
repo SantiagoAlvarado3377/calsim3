@@ -1,16 +1,20 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import App from '../App.jsx';
 import AnomalyDetection from './AnomalyDetection.jsx';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 const runSelect = () => screen.getByRole('combobox', { name: 'Simulation run' });
 const variableSelect = () => screen.getByRole('combobox', { name: 'Supported monthly variable' });
 const rangeSelect = () => screen.getByRole('combobox', { name: 'Date range' });
 const analyze = () => screen.getByRole('button', { name: 'Analyze', exact: true });
+const advanceAnalysis = () => act(() => { vi.advanceTimersByTime(1200); });
 
 it('opens from Dashboard and keeps dependent controls disabled with no imported runs', () => {
   render(<App />);
@@ -62,6 +66,60 @@ it('submits the selected run, variable, covered dates, and current sensitivity',
   });
 });
 
+it('shows each processing status and automatically opens results for the submitted selection', () => {
+  vi.useFakeTimers();
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Detect anomalies' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
+  fireEvent.click(analyze());
+
+  const heading = screen.getByRole('heading', { name: 'Analyzing monthly time-series data.' });
+  expect(document.activeElement).toBe(heading);
+  expect(screen.getByText('Baseline 2025 / SAMPLE_SHASTA_STORAGE')).toBeTruthy();
+  const steps = within(screen.getByRole('list', { name: 'Analysis steps' })).getAllByRole('listitem');
+  expect(steps.map(step => step.firstElementChild.textContent)).toEqual([
+    'Preparing selected observations', 'Evaluating unusual patterns', 'Generating findings for review',
+  ]);
+  const statuses = () => steps.map(step => step.lastElementChild.textContent);
+  expect(statuses()).toEqual(['In progress', 'Waiting', 'Waiting']);
+  advanceAnalysis();
+  expect(statuses()).toEqual(['Complete', 'In progress', 'Waiting']);
+  advanceAnalysis();
+  expect(statuses()).toEqual(['Complete', 'Complete', 'In progress']);
+  advanceAnalysis();
+
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Analysis results' }));
+  expect(screen.getByText('Sep 2022')).toBeTruthy();
+  expect(screen.getByText('May 2024')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Cancel Analysis' })).toBeNull();
+});
+
+it('cancels an active preview, preserves the configuration, and can rerun with zero sample findings', () => {
+  vi.useFakeTimers();
+  render(<AnomalyDetection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
+  const selection = [runSelect().value, variableSelect().value];
+  fireEvent.change(rangeSelect(), { target: { value: '2025-01/2025-12' } });
+  fireEvent.change(screen.getByRole('slider', { name: 'Sensitivity' }), { target: { value: '82' } });
+  fireEvent.click(analyze());
+  advanceAnalysis();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel Analysis' }));
+  act(() => { vi.runAllTimers(); });
+
+  expect(screen.queryByRole('heading', { name: 'Analysis results' })).toBeNull();
+  expect(document.activeElement).toBe(analyze());
+  expect([runSelect().value, variableSelect().value]).toEqual(selection);
+  expect(rangeSelect().value).toBe('2025-01/2025-12');
+  expect(screen.getByRole('slider', { name: 'Sensitivity' }).value).toBe('82');
+
+  fireEvent.click(analyze());
+  for (let step = 0; step < 3; step++) advanceAnalysis();
+  expect(screen.getByRole('heading', { name: 'Analysis results' })).toBeTruthy();
+  expect(screen.getByText('No sample findings in the selected date range.')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Run Another Analysis' }));
+  expect(rangeSelect().value).toBe('2025-01/2025-12');
+});
+
 it('uses the existing imported DSS catalog and only offers eligible monthly series', async () => {
   const fixture = `${import.meta.dirname}/../features/variableSearch/dss/fixtures/calsim_sample.dss`;
   const file = new File([readFileSync(fixture)], 'calsim_sample.dss');
@@ -82,4 +140,14 @@ it('uses the existing imported DSS catalog and only offers eligible monthly seri
   fireEvent.change(variableSelect(), { target: { value: channel.value } });
   expect(rangeSelect().value).toBe('');
   expect(analyze().disabled).toBe(true);
+
+  vi.useFakeTimers();
+  fireEvent.change(rangeSelect(), { target: { value: '1921-10/1931-09' } });
+  fireEvent.click(analyze());
+  expect(screen.getByText('Imported test run / C_SAC000')).toBeTruthy();
+  expect(screen.getByRole('combobox', { name: 'Active run:' }).disabled).toBe(true);
+  for (let step = 0; step < 3; step++) advanceAnalysis();
+  expect(screen.getByRole('heading', { name: 'Analysis results' })).toBeTruthy();
+  expect(screen.getByText(/Findings for this imported run will be available/)).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Sample findings' })).toBeNull();
 });

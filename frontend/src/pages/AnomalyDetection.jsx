@@ -1,9 +1,10 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import noticeIcon from '../assets/anomaly-notice-info.svg';
 import { ActiveRunContext } from '../components/ActiveRunContext.js';
 import PageHeader from '../components/PageHeader.jsx';
 import { mockSimulationRuns } from '../data/mockSimulationRuns.js';
 import { dateRangeKey, dateRangeOptions, supportedVariableOptions } from '../features/anomalyDetection/analysisConfiguration.js';
+import AnalysisRun from '../features/anomalyDetection/AnalysisRun.jsx';
 import { useVariableCatalog } from '../features/variableSearch/useVariableCatalog.js';
 import './AnomalyDetection.css';
 
@@ -17,7 +18,16 @@ function AnomalyDetection({ onAnalyze }) {
   const [variableKey, setVariableKey] = useState('');
   const [dateRange, setDateRange] = useState(null);
   const [sensitivity, setSensitivity] = useState(65);
-  const [submitted, setSubmitted] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const analyzeButton = useRef(null);
+  const restoreAnalyzeFocus = useRef(false);
+
+  useEffect(() => {
+    if (!analysis && restoreAnalyzeFocus.current) {
+      restoreAnalyzeFocus.current = false;
+      analyzeButton.current?.focus();
+    }
+  }, [analysis]);
 
   const availableRuns = useSamples ? mockSimulationRuns : runs;
   const run = availableRuns.find(item => item.id === (useSamples ? selectedSampleRunId : activeRunId));
@@ -27,7 +37,8 @@ function AnomalyDetection({ onAnalyze }) {
     () => supportedVariableOptions(catalogVariables.filter(variable => variable.runId === run?.id)),
     [catalogVariables, run?.id],
   );
-  const variable = variables.find(option => option.key === variableKey)?.variable;
+  const selectedVariable = variables.find(option => option.key === variableKey);
+  const variable = selectedVariable?.variable;
   const ranges = dateRangeOptions(variable, dateRange);
   const range = dateRange && ranges.find(option => option.key === dateRangeKey(dateRange));
 
@@ -40,13 +51,10 @@ function AnomalyDetection({ onAnalyze }) {
   const loading = catalog.status === 'loading';
   const catalogError = catalog.status === 'error';
   const canAnalyze = Boolean(run && variable && range);
-  const isSubmitted = submitted && submitted.run === run && submitted.variable === variable
-    && dateRangeKey(submitted.dateRange) === range?.key && submitted.sensitivity === sensitivity;
 
   function changeRun(event) {
     if (useSamples) setSelectedSampleRunId(event.target.value);
     else onActiveRunChange(event.target.value);
-    setSubmitted(null);
   }
 
   function toggleSamples() {
@@ -57,7 +65,6 @@ function AnomalyDetection({ onAnalyze }) {
       startMonth: initialSampleRun.startMonth,
       endMonth: initialSampleRun.endMonth,
     });
-    setSubmitted(null);
   }
 
   function handleAnalyze(event) {
@@ -66,7 +73,12 @@ function AnomalyDetection({ onAnalyze }) {
 
     const configuration = { run, variable, dateRange: { startMonth: range.startMonth, endMonth: range.endMonth }, sensitivity };
     if (onAnalyze) onAnalyze(configuration);
-    else setSubmitted(configuration);
+    else setAnalysis({ configuration, variableLabel: selectedVariable.label, sample: useSamples });
+  }
+
+  function returnToConfiguration() {
+    restoreAnalyzeFocus.current = true;
+    setAnalysis(null);
   }
 
   let variablePlaceholder = 'Choose a supported variable';
@@ -77,8 +89,9 @@ function AnomalyDetection({ onAnalyze }) {
 
   return (
     <main className="anomaly-detection" aria-labelledby="anomaly-detection-title">
-      <PageHeader id="anomaly-detection-title" title="Anomaly Detection" />
-      <form className="anomaly-configuration" onSubmit={handleAnalyze}>
+      <PageHeader id="anomaly-detection-title" title="Anomaly Detection" activeRunDisabled={Boolean(analysis)} />
+      {analysis && <AnalysisRun {...analysis} onReturn={returnToConfiguration} />}
+      <form className="anomaly-configuration" onSubmit={handleAnalyze} hidden={Boolean(analysis)}>
         <div className="anomaly-selection">
           <label className="anomaly-field">
             <span>Simulation run</span>
@@ -92,10 +105,7 @@ function AnomalyDetection({ onAnalyze }) {
             <select
               value={variable ? variableKey : ''}
               disabled={!variables.length}
-              onChange={event => {
-                setVariableKey(event.target.value);
-                setSubmitted(null);
-              }}
+              onChange={event => setVariableKey(event.target.value)}
             >
               <option value="">{variablePlaceholder}</option>
               {variables.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
@@ -106,19 +116,14 @@ function AnomalyDetection({ onAnalyze }) {
             <select
               value={range?.key ?? ''}
               disabled={!variable}
-              onChange={event => {
-                setDateRange(ranges.find(option => option.key === event.target.value) ?? null);
-                setSubmitted(null);
-              }}
+              onChange={event => setDateRange(ranges.find(option => option.key === event.target.value) ?? null)}
             >
               <option value="">{variable ? 'Choose a date range' : 'Choose a variable first'}</option>
               {ranges.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
             </select>
           </label>
-          <button className="anomaly-analyze" type="submit" disabled={!canAnalyze}>Analyze</button>
+          <button className="anomaly-analyze" type="submit" ref={analyzeButton} disabled={!canAnalyze}>Analyze</button>
         </div>
-
-        {isSubmitted && <p className="anomaly-submission" role="status">Configuration ready. Running an analysis will be available in a later update.</p>}
 
         <div className="anomaly-panels">
           <section className="anomaly-panel" aria-labelledby="anomaly-method-title">
@@ -137,10 +142,7 @@ function AnomalyDetection({ onAnalyze }) {
                 value={sensitivity}
                 aria-valuetext={`${sensitivity}%`}
                 style={{ '--anomaly-sensitivity': `${sensitivity}%` }}
-                onChange={event => {
-                  setSensitivity(Number(event.target.value));
-                  setSubmitted(null);
-                }}
+                onChange={event => setSensitivity(Number(event.target.value))}
               />
               <div className="anomaly-slider-labels" aria-hidden="true"><span>Low</span><span>High</span></div>
             </div>
@@ -164,7 +166,9 @@ function AnomalyDetection({ onAnalyze }) {
               </ul>
             )}
             <p className="anomaly-prototype-note">
-              {useSamples ? 'Prototype mode uses sample data. Analysis is pending.' : 'Prototype mode supports configuration. Analysis is pending.'}
+              {useSamples
+                ? 'Prototype mode demonstrates the workflow with sample findings.'
+                : 'Prototype mode previews the workflow for imported runs. Findings require the detection engine.'}
             </p>
             <button className="anomaly-sample-action" type="button" onClick={toggleSamples}>
               {useSamples ? 'Use imported runs' : 'Explore sample data'}

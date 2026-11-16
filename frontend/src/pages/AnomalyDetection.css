@@ -163,16 +163,12 @@
   line-height: 16px;
 }
 
-.anomaly-notice,
-.anomaly-submission {
+.anomaly-notice {
   padding: 12px 20px;
   border: 1px solid var(--anomaly-border);
   border-radius: 9px;
   background: #eaf2f9;
   color: #183b59;
-}
-
-.anomaly-notice {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -182,10 +178,6 @@
 .anomaly-notice img {
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-.anomaly-submission {
-  margin: 16px 0 0;
 }
 
 .anomaly-supported p {
@@ -226,9 +218,140 @@
   cursor: pointer;
 }
 
-.anomaly-configuration :is(button, select, input, ul):focus-visible {
+.anomaly-configuration :is(button, select, input, ul):focus-visible,
+.anomaly-run-button:focus-visible {
   outline: 2px solid var(--anomaly-blue);
   outline-offset: 2px;
+}
+
+.anomaly-run {
+  max-width: 1700px;
+  margin-inline: auto;
+  padding: 20px 36px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.anomaly-run-panel {
+  padding: 32px;
+  border: 1px solid var(--anomaly-border);
+  border-radius: 16px;
+  background: white;
+  overflow-wrap: anywhere;
+}
+
+.anomaly-run h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.anomaly-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 340px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.anomaly-progress-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: #eaf2f9;
+}
+
+.anomaly-spinner {
+  transform: rotate(-55deg);
+  animation: anomaly-spin 1s linear infinite;
+}
+
+@keyframes anomaly-spin {
+  to { transform: rotate(305deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anomaly-spinner {
+    animation: none;
+  }
+}
+
+.anomaly-run-selection {
+  max-width: 672px;
+  margin: 12px 0 0;
+  color: var(--anomaly-muted);
+  line-height: 28px;
+}
+
+.anomaly-progress-steps {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 320px);
+  margin: 20px 0 28px;
+  padding: 0;
+  list-style: none;
+  color: var(--anomaly-muted);
+  line-height: 28px;
+  text-align: start;
+}
+
+.anomaly-progress-steps li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.anomaly-step-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.anomaly-step-label img {
+  flex-shrink: 0;
+}
+
+.anomaly-run-button {
+  min-height: 44px;
+  padding: 10px 24px;
+  border: 1px solid var(--anomaly-border);
+  border-radius: 10px;
+  background: white;
+  color: var(--anomaly-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.anomaly-run-button:hover {
+  background: #eaf2f9;
+}
+
+.anomaly-outcome-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.anomaly-outcome .anomaly-run-selection {
+  margin-top: 0;
+}
+
+.anomaly-outcome h3 {
+  margin-block: 16px 0;
+  font-size: 16px;
+}
+
+.anomaly-outcome ul {
+  padding-inline-start: 20px;
 }
 
 @container (max-width: 780px) {
@@ -253,6 +376,10 @@
 @container (max-width: 450px) {
   .anomaly-configuration {
     padding: 28px 20px 20px;
+  }
+
+  .anomaly-run {
+    padding-inline: 20px;
   }
 
   .anomaly-selection {
