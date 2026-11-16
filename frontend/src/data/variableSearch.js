@@ -2,8 +2,8 @@ import { WATER_YEAR_TYPES } from '../features/variableSearch/searchVariables.js'
 import { mockSimulationRuns } from './mockSimulationRuns.js';
 
 // Sample metadata only. The existing run fixtures supply run IDs and date ranges.
-const storage = { componentType: 'Storage', nodeCategory: 'Storage', units: 'TAF', interval: '1MON' };
-const flow = { componentType: 'Flow', nodeCategory: 'Channel', units: 'CFS', interval: '1MON' };
+const storage = { componentType: 'Storage', nodeCategory: 'Storage', units: 'TAF', interval: '1MON', dataType: 'PER-AVER' };
+const flow = { componentType: 'Flow', nodeCategory: 'Channel', units: 'CFS', interval: '1MON', dataType: 'PER-AVER' };
 const variableMetadata = {
   SAMPLE_SHASTA_STORAGE: { ...storage, location: 'Shasta Lake' },
   SAMPLE_OROVILLE_STORAGE: { ...storage, location: 'Lake Oroville' },

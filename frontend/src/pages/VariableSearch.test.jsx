@@ -39,7 +39,7 @@ describe('Variable Search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
     fireEvent.click(screen.getByRole('button', { name: 'Analyze Anomalies' }));
     expect(screen.getByRole('heading', { name: 'Anomaly Detection' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Main navigation' })).getByRole('button', { name: 'Variable Search' }));
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
   });
 

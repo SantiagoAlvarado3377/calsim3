@@ -33,7 +33,7 @@ const nodeCategories = {
 
 // One DSS time series -> one search row. The DSS C part (the record's kind,
 // e.g. STORAGE) is the component type; the B-part prefix is the node category.
-function toVariable(run, { a, b, c, e, f, units, startMonth, endMonth }) {
+function toVariable(run, { a, b, c, e, f, units, dataType, startMonth, endMonth }) {
   const split = b.indexOf('_');
   const prefix = split > 0 ? b.slice(0, split) : '';
 
@@ -46,6 +46,7 @@ function toVariable(run, { a, b, c, e, f, units, startMonth, endMonth }) {
     componentType: c,
     nodeCategory: nodeCategories[prefix] ?? (prefix || 'Other'),
     units,
+    dataType,
     interval: e,
     startMonth,
     endMonth,

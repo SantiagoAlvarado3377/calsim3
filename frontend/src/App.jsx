@@ -4,18 +4,11 @@ import DataExplorer from './pages/DataExplorer';
 import CompareRuns from './pages/CompareRuns';
 import VariableSearch from './pages/VariableSearch';
 import ImportData from './pages/ImportData'; 
+import AnomalyDetection from './pages/AnomalyDetection.jsx';
 import { mockSimulationRuns } from './data/mockSimulationRuns.js';
 import SimulationRuns from './pages/SimulationRuns';
-import PageHeader from './components/PageHeader.jsx';
 import { ActiveRunContext } from './components/ActiveRunContext.js';
 import './App.css';
-
-const destinations = {
-    'import-data': 'Import Data',
-    'variable-search': 'Variable Search',
-    'compare-runs': 'Compare Runs',
-    'anomaly-detection': 'Anomaly Detection',
-};
 
 const sidebarDestinations = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -24,19 +17,8 @@ const sidebarDestinations = [
     { id: 'variable-search', label: 'Variable Search' },
     { id: 'data-explorer', label: 'Data Explorer' },
     { id: 'compare-runs', label: 'Compare Runs' },
+    { id: 'anomaly-detection', label: 'Anomaly Detection' },
 ];
-
-// Only navigation destinations are provided here; their features belong to later work.
-function DestinationPage({ title, onNavigate }) {
-    return (
-        <main className="data-explorer" aria-labelledby="destination-title">
-            <PageHeader id="destination-title" title={title} />
-            <div className="destination-content">
-                <button type="button" onClick={() => onNavigate('variable-search')}>Return to variable search</button>
-            </div>
-        </main>
-    );
-}
 
 function Sidebar({ currentPage, onNavigate }) {
     return (
@@ -72,13 +54,14 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, on
     if (currentPage === 'data-explorer') return <DataExplorer />;
     if (currentPage === 'compare-runs') return <CompareRuns />;
     if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
+    if (currentPage === 'anomaly-detection') return <AnomalyDetection />;
     if (currentPage === 'import-data') {
         // SCRUM-124: names taken = the sample runs plus runs imported this session.
         const existingRunNames = [...mockSimulationRuns, ...importedRuns].map(run => run.name);
         return <ImportData onNavigate={onNavigate} onImport={onImport} existingRunNames={existingRunNames} />;
     }
 
-    return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
+    return null;
 }
 
 function App({ importedRuns = [], recentActivity = [] }) {
