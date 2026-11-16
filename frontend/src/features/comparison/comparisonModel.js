@@ -205,6 +205,11 @@ export function deriveComparisonView(state, runs) {
   const alternativeRun = findRun(runs, state.alternativeRunId);
   const sharedVariables = getSharedVariables(baselineRun, alternativeRun);
   const overlap = getOverlap(baselineRun, alternativeRun);
+  const overlapStatus = !baselineRun || !alternativeRun
+    ? 'unavailable'
+    : (!hasValidCoverage(baselineRun) || !hasValidCoverage(alternativeRun)
+        ? 'invalid'
+        : (overlap ? 'overlap' : 'none'));
   const messages = [];
 
   if (!baselineRun) {
@@ -241,6 +246,7 @@ export function deriveComparisonView(state, runs) {
     alternativeRun,
     sharedVariables,
     overlap,
+    overlapStatus,
     messages,
     isValid,
   };
