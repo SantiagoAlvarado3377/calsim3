@@ -32,7 +32,7 @@ export function matchingWaterYears(variable, waterYearTypes, type) {
     .map(([year]) => year);
 }
 
-// SCRUM-161: rows-per-page choices; the pager appears once results pass the first size.
+// SCRUM-161 / SCRUM-201: page-size choices remain available for any result count.
 export const PAGE_SIZES = [25, 50, 100];
 
 // SCRUM-161: one page of results. page is 1-based and clamped to the last

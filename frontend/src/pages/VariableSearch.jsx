@@ -6,6 +6,7 @@ import {
   matchingWaterYears, PAGE_SIZES, paginate, searchVariables, WATER_YEAR_TYPES,
 } from '../features/variableSearch/searchVariables.js';
 import { useVariableCatalog } from '../features/variableSearch/useVariableCatalog.js';
+import { sortVariables } from '../features/variableSearch/sortVariables.js';
 import { EmptyState, ErrorState, LoadingState, NoImportState } from '../features/variableSearch/SearchStates.jsx';
 import VariableResults, { ResultsPager } from '../features/variableSearch/VariableResults.jsx';
 import VariableDetails from '../features/variableSearch/VariableDetails.jsx';
@@ -53,7 +54,10 @@ function VariableSearch({ onNavigate }) {
   const [waterYearType, setWaterYearType] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  const [sort, setSort] = useState({ field: 'identifier', direction: 'ascending' });
   const [selectedVariable, setSelectedVariable] = useState(null);
+  // Analysis selection is independent of the chart currently being viewed.
+  const [analysisSelection, setAnalysisSelection] = useState(null);
   const chartButtonRef = useRef(null);
   const keywordRef = useRef(null);
 
@@ -87,6 +91,14 @@ function VariableSearch({ onNavigate }) {
   const { data } = catalog;
   // Switching the active run loads new variables; details for the old run's variable close.
   const shownVariable = selectedVariable && data.variables.includes(selectedVariable) ? selectedVariable : null;
+  // Bind the selection to this catalog, so a run change or re-import cannot
+  // send a stale variable (even if the new file contains the same pathname).
+  const analysisVariable = analysisSelection?.catalog === data
+    ? data.variables.find(variable => variable.id === analysisSelection.variableId)
+    : null;
+  const analysisRun = catalog.sample
+    ? data.runs.find(run => run.id === analysisVariable?.runId)
+    : activeRun;
   const hasWaterYears = Object.keys(data.waterYearTypes).length > 0;
   let results = [];
   let searchError = null;
@@ -99,7 +111,23 @@ function VariableSearch({ onNavigate }) {
   }
   const yearsById = waterYearsById(results, data.waterYearTypes, waterYearType);
   if (waterYearType) results = results.filter(variable => yearsById.get(variable.id).length > 0);
-  const shown = paginate(results, page, pageSize);
+  const shown = paginate(sortVariables(results, sort), page, pageSize);
+  const firstResult = results.length ? (shown.page - 1) * pageSize + 1 : 0;
+  const lastResult = Math.min(shown.page * pageSize, results.length);
+
+  function sendToAnalysis(destination) {
+    if (analysisVariable && analysisRun) {
+      onNavigate(destination, { variable: analysisVariable, run: analysisRun });
+    }
+  }
+
+  function updateSort(field) {
+    setSort(current => ({
+      field,
+      direction: current.field === field && current.direction === 'ascending' ? 'descending' : 'ascending',
+    }));
+    setPage(1);
+  }
 
   function openDetails(variable, button) {
     chartButtonRef.current = button;
@@ -121,6 +149,7 @@ function VariableSearch({ onNavigate }) {
     setFilters(defaultFilters);
     setWaterYearType('');
     setPage(1);
+    setAnalysisSelection(null);
   }
 
   // SCRUM-148 / SCRUM-150: start over from the empty or failed state.
@@ -208,37 +237,45 @@ function VariableSearch({ onNavigate }) {
           <div className="variable-search-results-heading">
             <h2 id="variable-results-title">Search results</h2>
             <p role="status">{results.length.toLocaleString('en-US')} matching {results.length === 1 ? 'variable' : 'variables'}</p>
+            <p aria-live="polite" aria-label="Result range">
+              Showing {firstResult.toLocaleString('en-US')}–{lastResult.toLocaleString('en-US')} of {results.length.toLocaleString('en-US')}
+            </p>
           </div>
           {searchError && <ErrorState error={searchError} onRetry={resetSearch} />}
           {!searchError && results.length === 0 && <EmptyState onReset={resetSearch} />}
           {results.length > 0 && (
-            <>
-              <VariableResults
-                variables={shown.items}
-                waterYearType={waterYearType}
-                yearsById={yearsById}
-                onViewChart={openDetails}
-              />
-              {results.length > PAGE_SIZES[0] && (
-                <ResultsPager
-                  page={shown.page}
-                  pageCount={shown.pageCount}
-                  pageSize={pageSize}
-                  total={results.length}
-                  onPageChange={setPage}
-                  onPageSizeChange={size => {
-                    setPageSize(size);
-                    setPage(1);
-                  }}
-                />
-              )}
-            </>
+            <VariableResults
+              variables={shown.items}
+              sort={sort}
+              onSort={updateSort}
+              waterYearType={waterYearType}
+              yearsById={yearsById}
+              onViewChart={openDetails}
+              selectedVariableId={analysisVariable?.id}
+              onSelectVariable={variable => setAnalysisSelection({ catalog: data, variableId: variable.id })}
+            />
           )}
+          <ResultsPager
+            page={shown.page}
+            pageCount={shown.pageCount}
+            pageSize={pageSize}
+            total={results.length}
+            onPageChange={setPage}
+            onPageSizeChange={size => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
         </section>
 
         <div className="variable-search-actions">
-          <button type="button" onClick={() => onNavigate('compare-runs')}>Compare Runs</button>
-          <button type="button" onClick={() => onNavigate('anomaly-detection')}>Analyze Anomalies</button>
+          <p className="variable-search-selection" aria-live="polite" aria-label="Analysis selection">
+            {analysisVariable
+              ? `Selected: ${analysisVariable.identifier} in ${analysisRun?.name}`
+              : 'Select a variable to compare runs or analyze anomalies.'}
+          </p>
+          <button type="button" disabled={!analysisVariable || !analysisRun} onClick={() => sendToAnalysis('compare-runs')}>Compare Runs</button>
+          <button type="button" disabled={!analysisVariable || !analysisRun} onClick={() => sendToAnalysis('anomaly-detection')}>Analyze Anomalies</button>
         </div>
       </div>
     </main>

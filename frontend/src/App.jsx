@@ -8,6 +8,7 @@ import { mockSimulationRuns } from './data/mockSimulationRuns.js';
 import SimulationRuns from './pages/SimulationRuns';
 import PageHeader from './components/PageHeader.jsx';
 import { ActiveRunContext } from './components/ActiveRunContext.js';
+import AnalysisInput from './components/AnalysisInput.jsx';
 import './App.css';
 
 const destinations = {
@@ -27,11 +28,13 @@ const sidebarDestinations = [
 ];
 
 // Only navigation destinations are provided here; their features belong to later work.
-function DestinationPage({ title, onNavigate }) {
+function DestinationPage({ title, onNavigate, analysisSelection }) {
     return (
         <main className="data-explorer" aria-labelledby="destination-title">
             <PageHeader id="destination-title" title={title} />
             <div className="destination-content">
+                <AnalysisInput selection={analysisSelection} />
+                <p>Anomaly analysis is not available yet.</p>
                 <button type="button" onClick={() => onNavigate('variable-search')}>Return to variable search</button>
             </div>
         </main>
@@ -58,7 +61,7 @@ function Sidebar({ currentPage, onNavigate }) {
     );
 }
 
-function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, onImport }) {
+function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, onImport, analysisSelection }) {
     if (currentPage === 'dashboard') {
         return (
             <Dashboard
@@ -70,7 +73,7 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, on
     }
     if (currentPage === 'simulation-runs') return <SimulationRuns />;
     if (currentPage === 'data-explorer') return <DataExplorer />;
-    if (currentPage === 'compare-runs') return <CompareRuns />;
+    if (currentPage === 'compare-runs') return <CompareRuns analysisSelection={analysisSelection} />;
     if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
     if (currentPage === 'import-data') {
         // SCRUM-124: names taken = the sample runs plus runs imported this session.
@@ -78,11 +81,12 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, on
         return <ImportData onNavigate={onNavigate} onImport={onImport} existingRunNames={existingRunNames} />;
     }
 
-    return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} />;
+    return <DestinationPage title={destinations[currentPage]} onNavigate={onNavigate} analysisSelection={analysisSelection} />;
 }
 
 function App({ importedRuns = [], recentActivity = [] }) {
-    const [currentPage, setCurrentPage] = useState('dashboard');
+    const [navigation, setNavigation] = useState({ page: 'dashboard', analysisSelection: null });
+    const currentPage = navigation.page;
     // Runs imported during this session, each with the File the user chose
     // (SCRUM-163). Saving them between sessions belongs to SCRUM-125.
     const [runs, setRuns] = useState(importedRuns);
@@ -91,6 +95,21 @@ function App({ importedRuns = [], recentActivity = [] }) {
     const activeRunId = runs.some(run => run.id === selectedRunId)
         ? selectedRunId
         : runs[0]?.id ?? '';
+
+    function navigate(page, analysisSelection = null) {
+        setNavigation({ page, analysisSelection });
+    }
+
+    function changeActiveRun(runId) {
+        setSelectedRunId(runId);
+        setNavigation(current => ({ ...current, analysisSelection: null }));
+    }
+
+    // Re-importing or switching the active run invalidates an imported input.
+    const input = navigation.analysisSelection;
+    const analysisSelection = input && (!input.run.file || (
+        input.run.id === activeRunId && runs.includes(input.run)
+    )) ? input : null;
 
     // A newly imported run becomes the active run.
     function addRun(run) {
@@ -104,15 +123,16 @@ function App({ importedRuns = [], recentActivity = [] }) {
     }
 
     return (
-        <ActiveRunContext.Provider value={{ runs, activeRunId, onActiveRunChange: setSelectedRunId, onRunFileChange: replaceRunFile }}>
+        <ActiveRunContext.Provider value={{ runs, activeRunId, onActiveRunChange: changeActiveRun, onRunFileChange: replaceRunFile }}>
             <div className={`app-layout app-layout--${currentPage}`}>
-                <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+                <Sidebar currentPage={currentPage} onNavigate={navigate} />
                 <PageContent
                     currentPage={currentPage}
-                    onNavigate={setCurrentPage}
+                    onNavigate={navigate}
                     importedRuns={runs}
                     recentActivity={recentActivity}
                     onImport={addRun}
+                    analysisSelection={analysisSelection}
                 />
             </div>
         </ActiveRunContext.Provider>
