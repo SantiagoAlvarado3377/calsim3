@@ -18,6 +18,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import DssDropZone from '../features/importData/DssDropZone.jsx';
 import { validateDssFile } from '../features/importData/validateDssFile.js';
 import { fileNameToRunName } from '../features/importData/fileNameToRunName.js';
+import { createRun } from '../data/runModel.js'; // SCRUM-125: shared run shape
 import { validateRunMetadata } from '../features/importData/validateRunMetadata.js';
 import { mockSimulationRuns } from '../data/mockSimulationRuns.js';
 import './ImportData.css'; // page-specific styles, same pattern as the other pages
@@ -190,15 +191,18 @@ function ImportData({ onImport, existingRunNames = mockRunNames }) {
     if (!isFormValid) return; // belt and braces; the button is disabled anyway
  
     // SCRUM-163: hand the run and its File to the app for this session so
-    // Variable Search can read it. Saving runs between sessions is SCRUM-125.
-    onImport?.({
-      id: `run-${Date.now()}`,
-      name: fields.runName.trim(),
-      description: fields.description.trim(),
-      source: selectedFile.name,
-      importedAt: new Date().toISOString(),
-      file: selectedFile,
-    });
+    // Variable Search can read it.
+    // SCRUM-125: the run object now comes from the shared createRun() in
+    // src/data/runModel.js instead of being built inline here, so every run has
+    // the same shape (including status, filePath and catalogSummary) that the
+    // database schema expects. createRun does the trimming too.
+    onImport?.(
+      createRun({
+        name: fields.runName,
+        description: fields.description,
+        file: selectedFile,
+      }),
+    );
     // Clear the form the same way Cancel does (so the same run isn't added
     // twice, no "Run name is required." shows, and the next file auto-fills),
     // then confirm. The status set after handleCancel wins.
@@ -323,4 +327,3 @@ function ImportData({ onImport, existingRunNames = mockRunNames }) {
 }
  
 export default ImportData;
- 

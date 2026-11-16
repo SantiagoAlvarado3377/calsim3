@@ -1,0 +1,9 @@
+# Python writes compiled copies of test files here when the tests run.
+# They're generated automatically, so they don't belong in git.
+__pycache__/
+*.pyc
+ 
+# Local SQLite database files (real data stays on each person's machine).
+*.db
+*.sqlite
+*.sqlite3
