@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import noticeIcon from '../assets/anomaly-notice-info.svg';
 import { ActiveRunContext } from '../components/ActiveRunContext.js';
+import AnalysisInput from '../components/AnalysisInput.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { mockSimulationRuns } from '../data/mockSimulationRuns.js';
 import { dateRangeKey, dateRangeOptions, supportedVariableOptions } from '../features/anomalyDetection/analysisConfiguration.js';
@@ -11,12 +12,17 @@ import './AnomalyDetection.css';
 const initialSampleRun = mockSimulationRuns[0];
 const emptyVariables = [];
 
-function AnomalyDetection({ onAnalyze }) {
+function AnomalyDetection({ analysisSelection = null, onAnalyze, onNavigate }) {
   const { runs, activeRunId, onActiveRunChange } = useContext(ActiveRunContext);
-  const [useSamples, setUseSamples] = useState(false);
-  const [selectedSampleRunId, setSelectedSampleRunId] = useState(initialSampleRun.id);
-  const [variableKey, setVariableKey] = useState('');
-  const [dateRange, setDateRange] = useState(null);
+  const [cameFromSearch] = useState(Boolean(analysisSelection));
+  const [incomingOption] = useState(() => analysisSelection && supportedVariableOptions([analysisSelection.variable])[0]);
+  const [useSamples, setUseSamples] = useState(Boolean(analysisSelection && !analysisSelection.run.file));
+  const [selectedSampleRunId, setSelectedSampleRunId] = useState(analysisSelection?.run.id ?? initialSampleRun.id);
+  const [variableKey, setVariableKey] = useState(incomingOption?.key ?? '');
+  const [dateRange, setDateRange] = useState(() => incomingOption ? {
+    startMonth: incomingOption.variable.startMonth,
+    endMonth: incomingOption.variable.endMonth,
+  } : null);
   const [sensitivity, setSensitivity] = useState(65);
   const [analysis, setAnalysis] = useState(null);
   const analyzeButton = useRef(null);
@@ -33,10 +39,10 @@ function AnomalyDetection({ onAnalyze }) {
   const run = availableRuns.find(item => item.id === (useSamples ? selectedSampleRunId : activeRunId));
   const catalog = useVariableCatalog(useSamples ? null : run, useSamples);
   const catalogVariables = catalog.data?.variables ?? emptyVariables;
-  const variables = useMemo(
-    () => supportedVariableOptions(catalogVariables.filter(variable => variable.runId === run?.id)),
-    [catalogVariables, run?.id],
-  );
+  const variables = useMemo(() => {
+    const options = supportedVariableOptions(catalogVariables.filter(variable => variable.runId === run?.id));
+    return useSamples ? options : options.sort((first, second) => first.label.localeCompare(second.label));
+  }, [catalogVariables, run?.id, useSamples]);
   const selectedVariable = variables.find(option => option.key === variableKey);
   const variable = selectedVariable?.variable;
   const ranges = dateRangeOptions(variable, dateRange);
@@ -51,6 +57,9 @@ function AnomalyDetection({ onAnalyze }) {
   const loading = catalog.status === 'loading';
   const catalogError = catalog.status === 'error';
   const canAnalyze = Boolean(run && variable && range);
+  const showSearchInput = analysisSelection && run?.id === analysisSelection.run.id
+    && useSamples === !analysisSelection.run.file
+    && (loading || variable?.id === analysisSelection.variable.id || (!incomingOption && !variable));
 
   function changeRun(event) {
     if (useSamples) setSelectedSampleRunId(event.target.value);
@@ -92,6 +101,19 @@ function AnomalyDetection({ onAnalyze }) {
       <PageHeader id="anomaly-detection-title" title="Anomaly Detection" activeRunDisabled={Boolean(analysis)} />
       {analysis && <AnalysisRun {...analysis} onReturn={returnToConfiguration} />}
       <form className="anomaly-configuration" onSubmit={handleAnalyze} hidden={Boolean(analysis)}>
+        {cameFromSearch && (
+          <div className="anomaly-search-input">
+            {showSearchInput && (
+              <>
+                <AnalysisInput selection={analysisSelection} />
+                {!incomingOption && <p>Choose a supported monthly variable to continue.</p>}
+              </>
+            )}
+            <button className="anomaly-run-button" type="button" onClick={() => onNavigate('variable-search')}>
+              Return to variable search
+            </button>
+          </div>
+        )}
         <div className="anomaly-selection">
           <label className="anomaly-field">
             <span>Simulation run</span>

@@ -1,4 +1,4 @@
-import { formatMonthRange } from './comparisonModel.js';
+import { formatMonth, formatMonthRange } from './comparisonModel.js';
 
 const baselinePoints = '52,310 128,254 205,272 282,204 359,180 436,218 513,163 590,198 667,148 744,170 821,126 898,154';
 const alternativePoints = '52,300 128,236 205,260 282,182 359,164 436,205 513,108 590,180 667,133 744,163 821,116 898,151';
@@ -22,7 +22,94 @@ function PrototypeAction({
   );
 }
 
-export function ComparisonPreview({ baselineName, alternativeName, dateRange, hasOverlap }) {
+export function ComparisonPreview({
+  baselineName,
+  alternativeName,
+  dateRange,
+  overlap,
+  overlapStatus,
+  result,
+}) {
+  const overlapMessage = overlapStatus === 'overlap'
+    ? `Calendar overlap: ${formatMonthRange(overlap)}`
+    : (overlapStatus === 'none'
+        ? 'No calendar date overlap'
+        : (overlapStatus === 'invalid'
+            ? 'Calendar overlap unavailable: invalid date coverage'
+            : 'Calendar overlap unavailable'));
+  const hasOverlap = overlapStatus === 'overlap';
+
+  if (result) {
+    return (
+      <section
+        className="comparison-applied-results"
+        aria-label="Applied comparison results"
+      >
+        <article className="comparison-applied-card">
+          <div className="comparison-card-heading">
+            <div>
+              <h2>Aligned monthly observations</h2>
+              <p className="comparison-fixture-notice">{result.source.label}</p>
+            </div>
+            <p className="comparison-applied-variable">{result.variableId}</p>
+          </div>
+
+          <div className="comparison-table-wrap">
+            <table aria-label="Aligned monthly observations">
+              <thead>
+                <tr>
+                  <th scope="col">Month</th>
+                  <th scope="col">{baselineName ?? 'Baseline'}</th>
+                  <th scope="col">{alternativeName ?? 'Alternative'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.pairs.map(pair => (
+                  <tr key={pair.month}>
+                    <th scope="row">{formatMonth(pair.month)}</th>
+                    <td>{pair.baselineValue}</td>
+                    <td>{pair.alternativeValue}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside className="comparison-summary-card" aria-label="Applied comparison summary">
+          <p className="comparison-applied-label">Applied comparison</p>
+          <dl>
+            <div>
+              <dt>Applied range</dt>
+              <dd className="comparison-summary-text">{formatMonthRange(result.appliedRange)}</dd>
+            </div>
+            <div>
+              <dt>Units</dt>
+              <dd>{result.units}</dd>
+            </div>
+            <div>
+              <dt>Frequency</dt>
+              <dd className="comparison-summary-text">Monthly</dd>
+            </div>
+            <div>
+              <dt>Comparable months</dt>
+              <dd>{result.comparableMonths}</dd>
+            </div>
+          </dl>
+          <p className={hasOverlap ? 'comparison-overlap-status' : 'comparison-overlap-status comparison-overlap-status--invalid'}>
+            <span className="comparison-overlap-icon" aria-hidden="true">
+              {hasOverlap ? '✓' : '!'}
+            </span>
+            <span>{overlapMessage}</span>
+          </p>
+          <p className="comparison-overlap-note">
+            Comparable months count only usable paired observations in the applied range.
+          </p>
+        </aside>
+      </section>
+    );
+  }
+
   return (
     <section className="comparison-results" aria-label="Comparison preview">
       <article className="comparison-chart-card">
@@ -87,12 +174,17 @@ export function ComparisonPreview({ baselineName, alternativeName, dateRange, ha
           </div>
           <div>
             <dt>Comparable months</dt>
-            <dd>72</dd>
+            <dd className="comparison-summary-text">Not calculated</dd>
           </div>
         </dl>
         <p className={hasOverlap ? 'comparison-overlap-status' : 'comparison-overlap-status comparison-overlap-status--invalid'}>
-          <span aria-hidden="true">{hasOverlap ? '✓' : '!'}</span>
-          {hasOverlap ? 'Overlap confirmed' : 'Overlap unavailable'}
+          <span className="comparison-overlap-icon" aria-hidden="true">
+            {hasOverlap ? '✓' : '!'}
+          </span>
+          <span>{overlapMessage}</span>
+        </p>
+        <p className="comparison-overlap-note">
+          Calendar coverage only; paired time-series data availability is not confirmed.
         </p>
         <p className="comparison-summary-unit">Monthly / TAF</p>
         <PrototypeAction>Save Comparison</PrototypeAction>

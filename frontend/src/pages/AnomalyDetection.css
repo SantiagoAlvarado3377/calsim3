@@ -25,6 +25,21 @@
   gap: 16px;
 }
 
+.anomaly-search-input {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.anomaly-search-input .anomaly-run-button {
+  justify-self: start;
+}
+
+.anomaly-search-input > p {
+  margin: 0;
+  color: var(--anomaly-muted);
+}
+
 .anomaly-field {
   display: grid;
   gap: 8px;
