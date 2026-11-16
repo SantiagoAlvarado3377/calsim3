@@ -9,8 +9,9 @@ import {
   transitionComparison,
 } from '../features/comparison/comparisonModel.js';
 import './CompareRuns.css';
+import AnalysisInput from '../components/AnalysisInput.jsx';
 
-function CompareRuns({ runs = mockSimulationRuns }) {
+function CompareRuns({ runs = mockSimulationRuns, analysisSelection }) {
   const [state, dispatch] = useReducer(
     (currentState, action) => transitionComparison(currentState, action, runs),
     runs,
@@ -43,6 +44,10 @@ function CompareRuns({ runs = mockSimulationRuns }) {
       <PageHeader id="comparison-title" title="Compare Simulation Runs" />
 
       <div className="comparison-workspace">
+        <AnalysisInput selection={analysisSelection} />
+        {analysisSelection && (
+          <p>The selected input has been received. The comparison controls and charts below use sample data; comparison calculations for this input are not available yet.</p>
+        )}
         <ComparisonControls
           runs={runs}
           baselineRunId={state.baselineRunId}

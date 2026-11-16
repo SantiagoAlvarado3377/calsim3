@@ -1,5 +1,6 @@
 import { formatMonth } from './formatMonth.js';
 import { PAGE_SIZES } from './searchVariables.js';
+import { useId } from 'react';
 
 // With a water year type chosen, the date column counts the years of that type instead.
 function dateColumn(variable, waterYearType, years) {
@@ -16,7 +17,8 @@ const columns = [
   { field: 'dateRange', label: 'Date range' },
 ];
 
-function VariableResults({ variables, sort, onSort, waterYearType, yearsById, onViewChart }) {
+function VariableResults({ variables, sort, onSort, waterYearType, yearsById, onViewChart, selectedVariableId, onSelectVariable }) {
+  const tableId = useId();
   return (
     <div className="variable-search-table-scroll" role="region" aria-label="Variable results table" tabIndex={0}>
       <table>
@@ -46,28 +48,47 @@ function VariableResults({ variables, sort, onSort, waterYearType, yearsById, on
                 </th>
               );
             })}
+            <th scope="col">Select</th>
             <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
-          {variables.map(variable => (
-            <tr key={variable.id}>
+          {variables.map((variable, index) => (
+            <tr
+              key={variable.id}
+              className={selectedVariableId === variable.id ? 'variable-search-row--selected' : undefined}
+              onClick={() => onSelectVariable(variable)}
+            >
               <th scope="row">
                 <span className="variable-search-identifier">{variable.identifier}</span>
                 <span className="variable-search-run-name">{variable.runName}</span>
               </th>
               <td>{variable.location || '—'}</td>
-              <td>{variable.componentType}</td>
+              <td id={`${tableId}-${index}-type`}>{variable.componentType}</td>
               <td>{variable.units || '—'}</td>
-              <td>{variable.interval}</td>
+              <td id={`${tableId}-${index}-interval`}>{variable.interval}</td>
               <td className="variable-search-date-range">
                 {dateColumn(variable, waterYearType, yearsById.get(variable.id))}
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  name="analysis-variable"
+                  aria-label={`Select ${variable.identifier} in ${variable.runName} for analysis`}
+                  aria-describedby={`${tableId}-${index}-type ${tableId}-${index}-interval`}
+                  checked={selectedVariableId === variable.id}
+                  onChange={() => onSelectVariable(variable)}
+                  onClick={event => event.stopPropagation()}
+                />
               </td>
               <td>
                 <button
                   type="button"
                   aria-label={`View Chart for ${variable.identifier} in ${variable.runName}`}
-                  onClick={event => onViewChart(variable, event.currentTarget)}
+                  onClick={event => {
+                    event.stopPropagation();
+                    onViewChart(variable, event.currentTarget);
+                  }}
                 >
                   View Chart
                 </button>
@@ -82,7 +103,7 @@ function VariableResults({ variables, sort, onSort, waterYearType, yearsById, on
 
 // SCRUM-161: page through large result sets without rendering every row.
 export function ResultsPager({ page, pageCount, pageSize, total, onPageChange, onPageSizeChange }) {
-  const first = (page - 1) * pageSize + 1;
+  const first = total ? (page - 1) * pageSize + 1 : 0;
   const last = Math.min(page * pageSize, total);
 
   return (

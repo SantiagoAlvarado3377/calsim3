@@ -46,13 +46,21 @@ describe('Variable Search', () => {
 
   it('connects the action buttons to the existing pages and supports returning', () => {
     openVariableSearch();
+    fireEvent.click(screen.getByRole('radio', { name: 'Select SAMPLE_SHASTA_STORAGE in Baseline 2025 for analysis' }));
     fireEvent.click(within(screen.getByRole('main')).getByRole('button', { name: 'Compare Runs' }));
     expect(screen.getByRole('heading', { name: 'Compare Simulation Runs' })).toBeTruthy();
+    const comparisonInput = screen.getByRole('region', { name: 'Selected analysis input' });
+    expect(within(comparisonInput).getByText('SAMPLE_SHASTA_STORAGE')).toBeTruthy();
+    expect(within(comparisonInput).getByText('Baseline 2025')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Variable Search' }));
     fireEvent.click(screen.getByRole('button', { name: 'Explore sample data' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Select DELTA_OUTFLOW in Alternative Operations A for analysis' }));
     fireEvent.click(screen.getByRole('button', { name: 'Analyze Anomalies' }));
     expect(screen.getByRole('heading', { name: 'Anomaly Detection' })).toBeTruthy();
+    const anomalyInput = screen.getByRole('region', { name: 'Selected analysis input' });
+    expect(within(anomalyInput).getByText('DELTA_OUTFLOW')).toBeTruthy();
+    expect(within(anomalyInput).getByText('Alternative Operations A')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Return to variable search' }));
     expect(screen.getByRole('heading', { name: 'Variable and Location Search' })).toBeTruthy();
   });
@@ -157,7 +165,7 @@ describe('Variable Search', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Run' }), { target: { value: 'historical-drought' } });
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
-      'Identifier↑', 'Location↕', 'Component Type↕', 'Units↕', 'Interval↕', 'Date range↕', 'Action',
+      'Identifier↑', 'Location↕', 'Component Type↕', 'Units↕', 'Interval↕', 'Date range↕', 'Select', 'Action',
     ]);
 
     const storageRow = within(table).getByRole('row', { name: /SAMPLE_SHASTA_STORAGE/ });
