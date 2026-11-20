@@ -1,25 +1,12 @@
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
-
-// sample options used until imported simulation data is connected
-const sampleRuns = [
-  {
-    id: 'sample-run-1',
-    name: 'Sample Run 1',
-    variables: [
-      { id: 'sample-storage', name: 'Sample Reservoir Storage' },
-      { id: 'sample-flow', name: 'Sample River Flow' },
-    ],
-  },
-  {
-    id: 'sample-run-2',
-    name: 'Sample Run 2',
-    variables: [
-      { id: 'sample-flow', name: 'Sample River Flow' },
-      { id: 'sample-demand', name: 'Sample Water Demand' },
-    ],
-  },
-];
+import { ActiveRunContext } from '../components/ActiveRunContext.js';
+import {
+  loadDssVariables,
+  logSearchError,
+  searchErrorMessages,
+} from '../features/variableSearch/loadDssVariables.js';
+import { formatMonth } from '../features/variableSearch/formatMonth.js';
 
 function validateDateRange(startDate, endDate) {
   if (!startDate || !endDate) {
@@ -48,7 +35,41 @@ function validateDateRange(startDate, endDate) {
   return '';
 }
 
-function DataExplorer() {
+// shows the dss b and c parts so two series at the same node stay apart
+function variableLabel(variable) {
+  return `${variable.identifier} (${variable.componentType})`;
+}
+
+// reads the chosen run's variables from its imported dss file, same reader as variable search
+function useRunVariables(run) {
+  const [loaded, setLoaded] = useState(null);
+
+  useEffect(() => {
+    if (!run?.file) return undefined;
+    let current = true;
+
+    loadDssVariables(run).then(
+      ({ variables }) => {
+        if (current) setLoaded({ run, variables });
+      },
+      (error) => {
+        logSearchError(error);
+        if (current) setLoaded({ run, error: searchErrorMessages.dataUnavailable });
+      },
+    );
+
+    // ignores a slow read that finishes after the user picks another run
+    return () => { current = false; };
+  }, [run]);
+
+  if (!run?.file) return { status: 'idle', variables: [] };
+  if (loaded?.run !== run) return { status: 'loading', variables: [] };
+  if (loaded.error) return { status: 'error', variables: [], error: loaded.error };
+  return { status: 'ready', variables: loaded.variables };
+}
+
+function DataExplorer({ onNavigate }) {
+  const { runs } = useContext(ActiveRunContext);
   const [selectedRunId, setSelectedRunId] = useState('');
   const [selectedVariableId, setSelectedVariableId] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -56,17 +77,16 @@ function DataExplorer() {
   const [formError, setFormError] = useState('');
   const [appliedSelections, setAppliedSelections] = useState(null);
 
-  const selectedRun = sampleRuns.find(
-    (run) => run.id === selectedRunId
+  const selectedRun = runs.find((run) => run.id === selectedRunId);
+  const catalog = useRunVariables(selectedRun);
+
+  const selectedVariable = catalog.variables.find(
+    (variable) => variable.id === selectedVariableId
   );
 
-  const appliedRun = sampleRuns.find(
-    (run) => run.id === appliedSelections?.runId
-  );
-
-  const appliedVariable = appliedRun?.variables.find(
-    (variable) => variable.id === appliedSelections?.variableId
-  );
+  // the applied run and variable are copied, so reloading a catalog cannot change them
+  const appliedRun = appliedSelections?.run;
+  const appliedVariable = appliedSelections?.variable;
 
   function handleRunChange(event) {
     setSelectedRunId(event.target.value);
@@ -82,10 +102,6 @@ function DataExplorer() {
       return;
     }
 
-    const selectedVariable = selectedRun.variables.find(
-      (variable) => variable.id === selectedVariableId
-    );
-
     if (!selectedVariable) {
       setFormError('Choose a variable from the selected run.');
       return;
@@ -100,8 +116,8 @@ function DataExplorer() {
 
     // saves a separate copy so editing the inputs does not change applied selections
     setAppliedSelections({
-      runId: selectedRunId,
-      variableId: selectedVariableId,
+      run: selectedRun,
+      variable: selectedVariable,
       startDate,
       endDate,
     });
@@ -109,13 +125,36 @@ function DataExplorer() {
     setFormError('');
   }
 
+  let variablePrompt = 'Choose a run first';
+  if (catalog.status === 'loading') variablePrompt = 'Loading variables...';
+  if (catalog.status === 'error') variablePrompt = 'Variables unavailable';
+  if (catalog.status === 'ready') variablePrompt = 'Choose a variable';
+
+  if (runs.length === 0) {
+    return (
+      <main className="data-explorer" aria-labelledby="data-explorer-title">
+        <PageHeader id="data-explorer-title" title="Data Explorer" />
+
+        <div className="data-explorer-content">
+          <section className="data-explorer-empty" aria-labelledby="data-explorer-empty-title">
+            <h2 id="data-explorer-empty-title">No simulation runs imported</h2>
+            <p>Import a CalSim 3 DSS file to explore its variables.</p>
+            {onNavigate && (
+              <button type="button" onClick={() => onNavigate('import-data')}>
+                Go to Import Data
+              </button>
+            )}
+          </section>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="data-explorer" aria-labelledby="data-explorer-title">
       <PageHeader id="data-explorer-title" title="Data Explorer" />
 
       <div className="data-explorer-content">
-        <p>Sample data shown for development.</p>
-
         <form
           className="data-explorer-selectors"
           onSubmit={handleApply}
@@ -130,7 +169,7 @@ function DataExplorer() {
               required
             >
               <option value="">Choose a simulation run</option>
-              {sampleRuns.map((run) => (
+              {runs.map((run) => (
                 <option key={run.id} value={run.id}>
                   {run.name}
                 </option>
@@ -147,20 +186,26 @@ function DataExplorer() {
                 setSelectedVariableId(event.target.value);
                 setFormError('');
               }}
-              disabled={!selectedRun}
+              disabled={catalog.status !== 'ready'}
+              aria-describedby={selectedVariable ? 'variable-data-range' : undefined}
               required
             >
-              <option value="">
-                {selectedRun ? 'Choose a variable' : 'Choose a run first'}
-              </option>
+              <option value="">{variablePrompt}</option>
 
-              {/* shows only the variables available in the selected run */}
-              {selectedRun?.variables.map((variable) => (
+              {/* shows only the variables stored in the selected run's dss file */}
+              {catalog.variables.map((variable) => (
                 <option key={variable.id} value={variable.id}>
-                  {variable.name}
+                  {variableLabel(variable)}
                 </option>
               ))}
             </select>
+
+            {selectedVariable && (
+              <p id="variable-data-range" className="data-explorer-hint">
+                Data from {formatMonth(selectedVariable.startMonth)} to{' '}
+                {formatMonth(selectedVariable.endMonth)}
+              </p>
+            )}
           </div>
 
           <div className="data-explorer-field">
@@ -192,6 +237,12 @@ function DataExplorer() {
           </div>
 
           <div className="data-explorer-actions">
+            {catalog.status === 'error' && (
+              <p className="data-explorer-error" role="alert">
+                {catalog.error}
+              </p>
+            )}
+
             {formError && (
               <p className="data-explorer-error" role="alert">
                 {formError}
@@ -212,11 +263,11 @@ function DataExplorer() {
             <dl>
               <div>
                 <dt>Simulation run</dt>
-                <dd>{appliedRun?.name}</dd>
+                <dd>{appliedRun.name}</dd>
               </div>
               <div>
                 <dt>Variable</dt>
-                <dd>{appliedVariable?.name}</dd>
+                <dd>{variableLabel(appliedVariable)}</dd>
               </div>
               <div>
                 <dt>Start date</dt>
@@ -229,6 +280,34 @@ function DataExplorer() {
             </dl>
           </section>
         )}
+
+        {/* scrum-19 will swap the placeholder for the real time-series chart */}
+        <section
+          className="data-explorer-chart"
+          aria-labelledby="chart-variable-name"
+        >
+          <div className="data-explorer-chart-header">
+            {/* uses the applied variable so editing the dropdown alone does not change it */}
+            <h2 id="chart-variable-name">
+              {appliedVariable ? appliedVariable.identifier : 'Chart'}
+            </h2>
+
+            {/* units come from the dss record, some series store none */}
+            {appliedVariable && (
+              <p className="data-explorer-chart-units">
+                Units: {appliedVariable.units || 'Units not available'}
+              </p>
+            )}
+          </div>
+
+          <div className="data-explorer-chart-placeholder">
+            <p>
+              {appliedSelections
+                ? 'The chart for these selections will appear here.'
+                : 'Apply your selections to view the chart.'}
+            </p>
+          </div>
+        </section>
       </div>
     </main>
   );
