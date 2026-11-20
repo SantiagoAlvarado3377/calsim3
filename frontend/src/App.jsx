@@ -51,7 +51,7 @@ function PageContent({ currentPage, onNavigate, importedRuns, recentActivity, on
         );
     }
     if (currentPage === 'simulation-runs') return <SimulationRuns />;
-    if (currentPage === 'data-explorer') return <DataExplorer />;
+    if (currentPage === 'data-explorer') return <DataExplorer onNavigate={onNavigate} />;
     if (currentPage === 'compare-runs') return <CompareRuns analysisSelection={analysisSelection} />;
     if (currentPage === 'variable-search') return <VariableSearch onNavigate={onNavigate} />;
     if (currentPage === 'anomaly-detection') return <AnomalyDetection analysisSelection={analysisSelection} onNavigate={onNavigate} />;
