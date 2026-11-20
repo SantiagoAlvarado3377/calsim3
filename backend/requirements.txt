@@ -1,0 +1,13 @@
+# CalSim 3 Python service dependencies (SCRUM-218).
+# Install from the repo root:   py -3 -m pip install -r backend/requirements.txt
+#
+# hecdss: HEC's official Python package for reading HEC-DSS files (the team's
+# default choice; make_fixtures.py already uses it). Only backend/dss_reader.py
+# imports it, so switching to pydsstools later if neededmeans changing that one file.
+# Pinned because we verified its exact behaviour (catalog condensing, record
+# types, debug-level silencing) on this version. Ships Windows + Linux wheels
+# only (no Mac), which is why the app must keep working without the backend.
+hecdss==0.1.33
+
+# hecdss returns values as numpy arrays.
+numpy>=1.24

@@ -1,0 +1,4 @@
+# Python writes compiled copies of modules here when the service or tests run.
+# Generated automatically, so they don't belong in git.
+__pycache__/
+*.pyc
