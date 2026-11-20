@@ -291,6 +291,13 @@ function DataExplorer({ onNavigate }) {
             <h2 id="chart-variable-name">
               {appliedVariable ? appliedVariable.identifier : 'Chart'}
             </h2>
+
+            {/* units come from the dss record, some series store none */}
+            {appliedVariable && (
+              <p className="data-explorer-chart-units">
+                Units: {appliedVariable.units || 'Units not available'}
+              </p>
+            )}
           </div>
 
           <div className="data-explorer-chart-placeholder">

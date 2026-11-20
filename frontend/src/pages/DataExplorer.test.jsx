@@ -19,6 +19,7 @@ const series = (b, c, units) => ({
 const catalog = [
   series('S_SHSTA', 'STORAGE', 'TAF'),
   series('C_SAC000', 'CHANNEL', 'CFS'),
+  series('DELTAINDEX', 'INDEX', ''),
 ];
 
 const baseline = { id: 'run-1', name: 'Baseline 2025', file: new File(['dss'], 'baseline.dss') };
@@ -143,5 +144,43 @@ describe('Data Explorer chart header', () => {
     expect(screen.getByRole('alert').textContent)
       .toBe('Choose both a start date and an end date.');
     expect(screen.getByRole('region', { name: 'S_SHSTA' })).toBeTruthy();
+  });
+});
+
+describe('Data Explorer chart units', () => {
+  it('shows no units before anything is applied', () => {
+    renderPage();
+
+    expect(screen.queryByText(/^Units:/)).toBeNull();
+  });
+
+  it('shows the applied variable units next to its name', async () => {
+    renderPage();
+    await chooseSelections();
+    apply();
+
+    const chart = screen.getByRole('region', { name: 'S_SHSTA' });
+    expect(within(chart).getByText('Units: TAF')).toBeTruthy();
+  });
+
+  it('says when a variable has no units', async () => {
+    renderPage();
+    await chooseSelections({ variable: 'DELTAINDEX (INDEX)' });
+    apply();
+
+    expect(screen.getByText('Units: Units not available')).toBeTruthy();
+  });
+
+  it('only updates the units after a valid apply', async () => {
+    renderPage();
+    await chooseSelections();
+    apply();
+
+    const flow = screen.getByRole('option', { name: 'C_SAC000 (CHANNEL)' });
+    fireEvent.change(screen.getByLabelText('Variable'), { target: { value: flow.value } });
+    expect(screen.getByText('Units: TAF')).toBeTruthy();
+
+    apply();
+    expect(screen.getByText('Units: CFS')).toBeTruthy();
   });
 });
