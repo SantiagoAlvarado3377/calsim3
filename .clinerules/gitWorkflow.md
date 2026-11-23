@@ -24,5 +24,6 @@ Follow these rules for every change. They match how Team Null tracks work in Jir
 ## Before You Push
 
 - Run `npm test` and `npm run lint` from `frontend/` for frontend changes.
-- Run the Python tests for `backend/` or `db/` changes.
+- For `backend/` changes, run `py -3 -m unittest discover backend/tests -v` from the repo root (`python3` instead of `py -3` on Mac, Linux, and Codespaces).
+- For `db/` changes, run `py -3 -m unittest db/test_schema.py -v` from the repo root (`python3` instead of `py -3` on Mac, Linux, and Codespaces), plus the backend tests above.
 - Always show the user the exact git commands before running them. Never run `git push`, `git reset --hard`, or delete branches without the user approving.

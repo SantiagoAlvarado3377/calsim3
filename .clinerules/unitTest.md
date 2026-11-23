@@ -20,8 +20,9 @@ Whenever you create or significantly modify code, you **must** also create or up
 
 ## Backend Stack (`backend/`, `db/`)
 
-- Use Python's standard `unittest` only. Put tests in `backend/tests/`.
-- Use temporary folders for databases. Never touch a real `.calsim-data.local/` folder.
+- Use Python's standard `unittest` only. Put service tests in `backend/tests/`. Schema tests live in `db/test_schema.py`; update them whenever `db/schema.sql` changes.
+- Use temporary folders or `:memory:` for databases. Never touch a real `.calsim-data.local/` folder.
+- Use string run ids like `run-1794268800000` in test data. `runs.id` is `TEXT`, not an integer.
 
 ## Test File Conventions
 
@@ -30,6 +31,14 @@ Whenever you create or significantly modify code, you **must** also create or up
 
 ## Before You Finish
 
-- You must run the tests and make sure they pass: `npm test` from `frontend/`, or `py -3 -m unittest discover backend/tests -v` from the repo root.
-- You must run `npm run lint` from `frontend/` after frontend changes.
+You must run every suite your change touches and make sure it passes. Run the Python commands from the repo root. Use `py -3` on Windows and `python3` on Mac, Linux, and Codespaces.
+
+| Changed | Command |
+|---|---|
+| `frontend/` | `npm test` and `npm run lint` from `frontend/` |
+| `backend/` | `py -3 -m unittest discover backend/tests -v` (or `python3 -m unittest discover backend/tests -v`) |
+| `db/` | `py -3 -m unittest db/test_schema.py -v` (or `python3 -m unittest db/test_schema.py -v`) |
+
+A change to `db/schema.sql` also affects the backend, so run both the `db/` and `backend/` commands.
+
 - Never delete or skip a failing test to make the suite pass. Fix the code or ask.

@@ -28,10 +28,13 @@ Follow these rules when working in `backend/`, `db/`, or the Electron bridge. `b
 ## Database rules
 
 - `db/schema.sql` defines the tables. Change it only for a Jira story that needs it, and update `db/test_schema.py` in the same change.
+- Run ids are `TEXT` strings like `run-1794297600000` (`runs.id` and `series.run_id`). Validate them as nonempty strings. Never cast them to `int`.
 - Keep the schema plain SQLite so it works from any language.
+- After any `db/` change, run `py -3 -m unittest db/test_schema.py -v` from the repo root (`python3` on Mac, Linux, and Codespaces).
 
 ## Adding a command
 
 1. Add the handler in `backend/service.py` (SQL in `database.py`).
 2. Add the command name to the allow-list in `frontend/electron/backend.cjs`.
 3. Add a test in `backend/tests/` and a row to the Commands table in `backend/README.md`.
+4. Run `py -3 -m unittest discover backend/tests -v` from the repo root (`python3` on Mac, Linux, and Codespaces). The `add-backend-command` skill has the full steps.
