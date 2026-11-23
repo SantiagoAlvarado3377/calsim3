@@ -32,3 +32,12 @@ It includes the desktop runtime and built interface and runs without a separate 
 The first launch creates `CalSim3Data/` beside the executable. `settings/` holds the saved window size and maximized state, `session/` holds browser session data and cache, and `logs/` holds desktop startup logs. Keep that folder beside the executable when moving the app if you want to retain its settings.
 
 This development build is unsigned. Windows may show an unknown-publisher warning.
+
+## AI coding rules (Cline)
+
+The team uses the Cline extension for VS Code. Shared rules live in the repo so every AI agent follows the same conventions:
+
+- `.clinerules/`: always-on rules (project context, React style, unit tests, README updates, Git and Jira workflow, Python backend).
+- `.cline/skills/`: step-by-step skills Cline uses for specific jobs (`add-backend-command`, `connect-page-to-real-data`).
+
+Install Cline from the VS Code Extensions view and add your own API key in its settings. Keep **Execute commands** unchecked so Cline asks before running terminal commands. Never commit API keys.
